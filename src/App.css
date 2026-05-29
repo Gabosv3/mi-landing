@@ -2451,31 +2451,18 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   gap: 20px;
 }
 
-/* Text-based brand mark (replaces logo PNG) */
+/* Logo en hero */
 .ml__hero-brand {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  justify-content: center;
   margin-bottom: 4px;
 }
-.ml__hero-brand-mark {
-  font-family: var(--font-display);
-  font-size: 4.5rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #e8c97a 0%, #c9a464 50%, #a07830 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.ml__hero-brand-sub {
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+.ml__hero-logo {
+  width: 240px;
+  height: auto;
+  display: block;
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
 }
 
 .ml__hero-badge {

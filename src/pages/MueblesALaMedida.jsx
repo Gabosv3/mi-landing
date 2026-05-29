@@ -65,10 +65,9 @@ export default function MueblesALaMedida() {
 
         {/* Center content */}
         <div className="ml__hero-inner">
-          {/* Brand mark text (sin PNG) */}
+          {/* Logo */}
           <div className="ml__hero-brand">
-            <span className="ml__hero-brand-mark">BM</span>
-            <span className="ml__hero-brand-sub">Distribuidora Briancesco Mejivar</span>
+            <img src="/logo.png" alt="BM Distribuidora Briancesco Mejivar" className="ml__hero-logo" />
           </div>
 
           <div className="ml__hero-badge">
