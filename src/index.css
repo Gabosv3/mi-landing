@@ -21,7 +21,7 @@
   --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --ease:         cubic-bezier(0.4, 0, 0.2, 1);
   --t:            0.28s;
-  --max-w:        1200px;
+  --max-w:        2440px;
 }
 
 html { scroll-behavior: smooth; }

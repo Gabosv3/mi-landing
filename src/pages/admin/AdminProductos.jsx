@@ -1,13 +1,9 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection, getDocs, addDoc, updateDoc,
   deleteDoc, doc, serverTimestamp, orderBy, query as fsQuery,
 } from "firebase/firestore";
-import {
-  ref as storageRef, uploadBytesResumable,
-  getDownloadURL, deleteObject,
-} from "firebase/storage";
-import { db, storage } from "../../firebase/config";
+import { db } from "../../firebase/config";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
@@ -17,7 +13,7 @@ function buildImageItem(url, path, isPrimary, file) {
   return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0 };
 }
 
-const EMPTY_FORM = { name: "", category: "", customCategory: "", description: "", price: "" };
+const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", brand: "", availability: "Disponible" };
 
 export default function AdminProductos() {
   const [products,    setProducts]    = useState([]);
@@ -31,7 +27,7 @@ export default function AdminProductos() {
   const [search,      setSearch]      = useState("");
   const fileInputRef = useRef(null);
 
-  /* ── Cargar datos ── */
+  /* -- Cargar datos -- */
   const loadProducts = async () => {
     try {
       const snap = await getDocs(collection(db, "products"));
@@ -54,7 +50,7 @@ export default function AdminProductos() {
 
   const getCatColor = (cat) => catColors[cat] || "#6366f1";
 
-  /* ── Abrir formulario ── */
+  /* -- Abrir formulario -- */
   const openNew = () => {
     setForm(EMPTY_FORM);
     setImages([]);
@@ -67,9 +63,12 @@ export default function AdminProductos() {
     setForm({
       name:           p.name || "",
       category:       p.category || "",
+      subcategory:    p.subcategory || "",
       customCategory: "",
       description:    p.description || p.desc || "",
       price:          p.price || "",
+      brand:          p.brand || "",
+      availability:   p.availability || "Disponible",
     });
     /* Cargar imagenes existentes */
     const imgs = Array.isArray(p.images) && p.images.length > 0
@@ -85,7 +84,7 @@ export default function AdminProductos() {
     setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
   };
 
-  /* ── Manejo de imagenes ── */
+  /* -- Manejo de imagenes -- */
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -111,31 +110,33 @@ export default function AdminProductos() {
       return next;
     });
 
-  /* ── Subir imagen a Storage ── */
-  const uploadImage = (item, productId) =>
-    new Promise((resolve, reject) => {
-      const ext  = item.file.name.split(".").pop();
-      const path = `products/${productId}/${Date.now()}.${ext}`;
-      const sRef = storageRef(storage, path);
-      const task = uploadBytesResumable(sRef, item.file);
-      task.on(
-        "state_changed",
-        (snap) => {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: true, progress: pct } : i));
-        },
-        reject,
-        async () => {
-          const url = await getDownloadURL(task.snapshot.ref);
-          setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: false, progress: 100, url, storagePath: path, file: null } : i));
-          resolve({ url, path });
-        }
-      );
+  /* -- Subir imagen localmente (igual que en Contenido) -- */
+  const uploadImage = async (item, productId) => {
+    const dataUrl = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = (e) => res(e.target.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(item.file);
     });
+    
+    setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: true, progress: 50 } : i));
+    
+    const resp = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: dataUrl, name: `${productId}_${item.file.name}` }),
+    });
+    
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error);
+    
+    setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: false, progress: 100, url: json.url, storagePath: "", file: null } : i));
+    return { url: json.url, path: "" };
+  };
 
-  /* ── Guardar producto ── */
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!form.name || !form.price || !form.category) return alert("Faltan campos (Nombre, Precio, Categoria)");
     setSaving(true);
     try {
       const productId = editingId || `prod_${Date.now()}`;
@@ -157,8 +158,11 @@ export default function AdminProductos() {
       const data = {
         name:        form.name.trim(),
         category:    finalCategory,
+        subcategory: form.subcategory.trim(),
         description: form.description.trim(),
         price:       form.price.trim(),
+        brand:       form.brand.trim(),
+        availability:form.availability,
         images:      finalImages,
         image_url:   primaryImg?.url || "",   /* compatibilidad con vista publica */
         updatedAt:   serverTimestamp(),
@@ -195,7 +199,7 @@ export default function AdminProductos() {
 
   const primaryImg = images.find((i) => i.isPrimary) || images[0];
 
-  /* ── Render ── */
+  /* -- Render -- */
   return (
     <div className="admin-page">
       <div className="admin-page__header">
@@ -203,7 +207,7 @@ export default function AdminProductos() {
         <button className="admin-btn" onClick={openNew}>+ Nuevo Producto</button>
       </div>
 
-      {/* ════════════════ FORMULARIO ════════════════ */}
+      {/* ---------------- FORMULARIO ---------------- */}
       {showForm && (
         <form className="admin-editor adp-form" onSubmit={handleSave}>
           <h2 className="admin-editor__title">
@@ -239,7 +243,7 @@ export default function AdminProductos() {
                 {categories.map((c) => (
                   <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
                 ))}
-                <option value="custom">+ Otra categoria…</option>
+                <option value="custom">+ Otra categoria�</option>
               </select>
             </div>
 
@@ -257,6 +261,18 @@ export default function AdminProductos() {
               </div>
             )}
 
+            {/* Subcategoria */}
+            <div className="admin-form-group">
+              <label>Subcategor�a</label>
+              <input
+                type="text"
+                name="subcategory"
+                value={form.subcategory}
+                onChange={(e) => setForm((p) => ({ ...p, subcategory: e.target.value }))}
+                placeholder="Ej: Cocinas, Sillas, Sartenes..."
+              />
+            </div>
+
             {/* Precio */}
             <div className="admin-form-group">
               <label>Precio *</label>
@@ -270,6 +286,33 @@ export default function AdminProductos() {
               />
             </div>
 
+            {/* Marca */}
+            <div className="admin-form-group">
+              <label>Marca</label>
+              <input
+                type="text"
+                name="brand"
+                value={form.brand}
+                onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}
+                placeholder="Ej: Oster, Mabe..."
+              />
+            </div>
+
+            {/* Disponibilidad */}
+            <div className="admin-form-group">
+              <label>Disponibilidad</label>
+              <select
+                name="availability"
+                value={form.availability}
+                onChange={(e) => setForm((p) => ({ ...p, availability: e.target.value }))}
+                className="adp-select"
+              >
+                <option value="Disponible">Disponible</option>
+                <option value="Agotado">Agotado</option>
+                <option value="Bajo pedido">Bajo pedido</option>
+              </select>
+            </div>
+
             {/* Descripcion */}
             <div className="admin-form-group adp-form__full">
               <label>Descripcion</label>
@@ -278,13 +321,13 @@ export default function AdminProductos() {
                 rows={4}
                 value={form.description}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Describe el producto, usos, presentaciones disponibles…"
+                placeholder="Describe el producto, usos, presentaciones disponibles�"
               />
             </div>
 
           </div>
 
-          {/* ════ IMAGENES ════ */}
+          {/* ---- IMAGENES ---- */}
           <div className="adp-images-section">
             <div className="adp-images-header">
               <span className="adp-images-title">Imagenes del producto</span>
@@ -307,15 +350,15 @@ export default function AdminProductos() {
                         </div>
                       )}
                     </div>
-                    {img.isPrimary && <span className="adp-img-item__badge">★ Principal</span>}
+                    {img.isPrimary && <span className="adp-img-item__badge">? Principal</span>}
                     <div className="adp-img-item__actions">
                       {!img.isPrimary && (
                         <button type="button" className="adp-img-btn adp-img-btn--star" onClick={() => setPrimary(img.id)} title="Hacer principal">
-                          ☆
+                          ?
                         </button>
                       )}
                       <button type="button" className="adp-img-btn adp-img-btn--del" onClick={() => removeImage(img.id)} title="Eliminar">
-                        ✕
+                        ?
                       </button>
                     </div>
                   </div>
@@ -336,16 +379,16 @@ export default function AdminProductos() {
               className="adp-add-images-btn"
               onClick={() => fileInputRef.current?.click()}
             >
-              <span>+</span> Agregar imágenes
+              <span>+</span> Agregar im�genes
             </button>
             {images.length === 0 && (
-              <p className="adp-images-empty">Sin imágenes. La primera que agregues sera la principal.</p>
+              <p className="adp-images-empty">Sin im�genes. La primera que agregues sera la principal.</p>
             )}
           </div>
 
           <div className="admin-editor__actions">
             <button type="submit" className="admin-btn" disabled={saving}>
-              {saving ? "Subiendo y guardando…" : editingId ? "Guardar cambios" : "Crear producto"}
+              {saving ? "Subiendo y guardando�" : editingId ? "Guardar cambios" : "Crear producto"}
             </button>
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setShowForm(false); setImages([]); }}>
               Cancelar
@@ -354,19 +397,19 @@ export default function AdminProductos() {
         </form>
       )}
 
-      {/* ════════════════ BUSQUEDA ════════════════ */}
+      {/* ---------------- BUSQUEDA ---------------- */}
       <div className="adp-search-row">
         <input
           type="search"
           className="adp-search"
-          placeholder="Buscar por nombre o categoria…"
+          placeholder="Buscar por nombre o categoria�"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <span className="adp-count">{filtered.length} producto{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
-      {/* ════════════════ TABLA ════════════════ */}
+      {/* ---------------- TABLA ---------------- */}
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -402,7 +445,7 @@ export default function AdminProductos() {
                     </td>
                     <td>
                       <span className="adp-img-count">
-                        {imgCount > 0 ? `${imgCount} foto${imgCount !== 1 ? "s" : ""}` : "—"}
+                        {imgCount > 0 ? `${imgCount} foto${imgCount !== 1 ? "s" : ""}` : "�"}
                       </span>
                     </td>
                     <td>
@@ -425,3 +468,4 @@ export default function AdminProductos() {
     </div>
   );
 }
+

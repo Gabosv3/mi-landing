@@ -1,8 +1,10 @@
 ﻿import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import Cart from './components/Cart';
 import PrivateRoute from './components/admin/PrivateRoute';
 
 // Páginas públicas
@@ -34,6 +36,7 @@ function PublicLayout() {
   return (
     <>
       <Navbar />
+      <Cart />
       <main><Outlet /></main>
       <Footer />
     </>
@@ -44,32 +47,34 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ScrollToTop />
-        <Routes>
-          {/* Rutas admin */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route
-            path="/admin"
-            element={<PrivateRoute><AdminLayout /></PrivateRoute>}
-          >
-            <Route index        element={<AdminDashboard />} />
-            <Route path="dashboard"  element={<AdminDashboard />} />
-            <Route path="contenido"   element={<AdminContenido />} />
-            <Route path="categorias"  element={<AdminCategorias />} />
-            <Route path="productos"   element={<AdminProductos />} />
-            <Route path="mensajes"    element={<AdminMensajes />} />
-          </Route>
+        <CartProvider>
+          <ScrollToTop />
+          <Routes>
+            {/* Rutas admin */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={<PrivateRoute><AdminLayout /></PrivateRoute>}
+            >
+              <Route index        element={<AdminDashboard />} />
+              <Route path="dashboard"  element={<AdminDashboard />} />
+              <Route path="contenido"   element={<AdminContenido />} />
+              <Route path="categorias"  element={<AdminCategorias />} />
+              <Route path="productos"   element={<AdminProductos />} />
+              <Route path="mensajes"    element={<AdminMensajes />} />
+            </Route>
 
-          {/* Rutas públicas */}
-          <Route element={<PublicLayout />}>
-            <Route path="/"          element={<Home />} />
-            <Route path="/productos"     element={<Productos />} />
-            <Route path="/productos/:id"        element={<ProductoDetalle />} />
-            <Route path="/muebles-a-la-medida" element={<MueblesALaMedida />} />
-            <Route path="/nosotros"             element={<Nosotros />} />
-            <Route path="/contacto"  element={<Contacto />} />
-          </Route>
-        </Routes>
+            {/* Rutas públicas */}
+            <Route element={<PublicLayout />}>
+              <Route path="/"          element={<Home />} />
+              <Route path="/productos"     element={<Productos />} />
+              <Route path="/productos/:id"        element={<ProductoDetalle />} />
+              <Route path="/muebles-a-la-medida" element={<MueblesALaMedida />} />
+              <Route path="/nosotros"             element={<Nosotros />} />
+              <Route path="/contacto"  element={<Contacto />} />
+            </Route>
+          </Routes>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );
