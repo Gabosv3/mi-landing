@@ -243,7 +243,7 @@ export default function AdminProductos() {
                 {categories.map((c) => (
                   <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
                 ))}
-                <option value="custom">+ Otra categoria…</option>
+                <option value="custom">+ Otra categorÃ­a</option>
               </select>
             </div>
 
@@ -263,7 +263,7 @@ export default function AdminProductos() {
 
             {/* Subcategoria */}
             <div className="admin-form-group">
-              <label>Subcategoría</label>
+              <label>SubcategorÃ­a</label>
               <input
                 type="text"
                 name="subcategory"
@@ -321,7 +321,7 @@ export default function AdminProductos() {
                 rows={4}
                 value={form.description}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Describe el producto, usos, presentaciones disponibles…"
+                placeholder="Describe el producto, usos, presentaciones disponibles."
               />
             </div>
 
@@ -379,16 +379,16 @@ export default function AdminProductos() {
               className="adp-add-images-btn"
               onClick={() => fileInputRef.current?.click()}
             >
-              <span>+</span> Agregar imágenes
+              <span>+</span> Agregar imÃ¡genes
             </button>
             {images.length === 0 && (
-              <p className="adp-images-empty">Sin imágenes. La primera que agregues sera la principal.</p>
+              <p className="adp-images-empty">Sin imÃ¡genes. La primera que agregues sera la principal.</p>
             )}
           </div>
 
           <div className="admin-editor__actions">
             <button type="submit" className="admin-btn" disabled={saving}>
-              {saving ? "Subiendo y guardando…" : editingId ? "Guardar cambios" : "Crear producto"}
+              {saving ? "Subiendo y guardando..." : editingId ? "Guardar cambios" : "Crear producto"}
             </button>
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => { setShowForm(false); setImages([]); }}>
               Cancelar
@@ -402,7 +402,7 @@ export default function AdminProductos() {
         <input
           type="search"
           className="adp-search"
-          placeholder="Buscar por nombre o categoria…"
+          placeholder="Buscar por nombre o categorÃ­a"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -445,7 +445,7 @@ export default function AdminProductos() {
                     </td>
                     <td>
                       <span className="adp-img-count">
-                        {imgCount > 0 ? `${imgCount} foto${imgCount !== 1 ? "s" : ""}` : "—"}
+                        {imgCount > 0 ? `${imgCount} foto${imgCount !== 1 ? "s" : ""}` : "â€”"}
                       </span>
                     </td>
                     <td>

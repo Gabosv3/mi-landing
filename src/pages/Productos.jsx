@@ -6,15 +6,15 @@ import { useCart } from "../context/CartContext";
 
 const PLACEHOLDER = [
   { id: "p1", name: "Set de Limpieza Premium", category: "LIMPIEZA DEL HOGAR", description: "Set completo de productos para mantener tu hogar impecable.", image_url: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80" },
-  { id: "p2", name: "BaterÌa de Cocina 12 Piezas", category: "COCINA Y COMEDOR", description: "Juego de ollas y sartenes antiadherentes de alta calidad.", image_url: "https://images.unsplash.com/photo-1584990347449-a1f5b27b8435?w=800&q=80" },
-  { id: "p3", name: "Trapeador con Cubeta Escurridora", category: "LIMPIEZA DEL HOGAR", description: "Sistema de limpieza eficiente con escurridor autom·tico.", image_url: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=800&q=80" },
-  { id: "p4", name: "Juego de S·banas Queen", category: "DORMITORIO", description: "S·banas ultrasuaves de microfibra premium.", image_url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80" },
-  { id: "p5", name: "Vajilla 16 Piezas", category: "COCINA Y COMEDOR", description: "Vajilla de cer·mica elegante para 4 personas.", image_url: "https://images.unsplash.com/photo-1616627581576-f33190868a2d?w=800&q=80" },
-  { id: "p6", name: "Set de OrganizaciÛn", category: "ORGANIZACI”N", description: "Cajas apilables transparentes multiusos.", image_url: "https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=800&q=80" },
-  { id: "p7", name: "Licuadora Cl·sica", category: "ELECTRODOM…STICOS", description: "Potente motor para licuados y batidos diarios.", image_url: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&q=80" },
+  { id: "p2", name: "Bater√≠a de Cocina 12 Piezas", category: "COCINA Y COMEDOR", description: "Juego de ollas y sartenes antiadherentes de alta calidad.", image_url: "https://images.unsplash.com/photo-1584990347449-a1f5b27b8435?w=800&q=80" },
+  { id: "p3", name: "Trapeador con Cubeta Escurridora", category: "LIMPIEZA DEL HOGAR", description: "Sistema de limpieza eficiente con escurridor autom√°tico.", image_url: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=800&q=80" },
+  { id: "p4", name: "Juego de S√°banas Queen", category: "DORMITORIO", description: "S√°banas ultrasuaves de microfibra premium.", image_url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80" },
+  { id: "p5", name: "Vajilla 16 Piezas", category: "COCINA Y COMEDOR", description: "Vajilla de cer√°mica elegante para 4 personas.", image_url: "https://images.unsplash.com/photo-1616627581576-f33190868a2d?w=800&q=80" },
+  { id: "p6", name: "Set de Organizaci√≥n", category: "ORGANIZACI√ìN", description: "Cajas apilables transparentes multiusos.", image_url: "https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=800&q=80" },
+  { id: "p7", name: "Licuadora Cl√°sica", category: "ELECTRODOM√âSTICOS", description: "Potente motor para licuados y batidos diarios.", image_url: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&q=80" },
   { id: "p8", name: "Set de Cuchillos con Base", category: "COCINA Y COMEDOR", description: "Cuchillos de acero inoxidable con taco de madera.", image_url: "https://images.unsplash.com/photo-1593618998160-e34014e67546?w=800&q=80" },
   { id: "p9", name: "Aspiradora Compacta", category: "LIMPIEZA DEL HOGAR", description: "Aspiradora ligera y potente con sistema sin bolsa.", image_url: "https://images.unsplash.com/photo-1558317374-067fb5f30001?w=800&q=80" },
-  { id: "p10", name: "Toallas de BaÒo", category: "DORMITORIO", description: "Set de toallas de algodÛn absorbente.", image_url: "https://images.unsplash.com/photo-1584988636402-ddc9d57fb4a7?w=800&q=80" },
+  { id: "p10", name: "Toallas de Ba√±o", category: "DORMITORIO", description: "Set de toallas de algod√≥n absorbente.", image_url: "https://images.unsplash.com/photo-1584988636402-ddc9d57fb4a7?w=800&q=80" },
 ];
 
 export default function Productos() {
@@ -22,8 +22,8 @@ export default function Productos() {
   const [products, setProducts] = useState(PLACEHOLDER);
   
   // States para los filtros
-  const [catFilter,   setCatFilter]   = useState("Todas las categorÌas");
-  const [subFilter,   setSubFilter]   = useState("Todas las subcategorÌas");
+  const [catFilter,   setCatFilter]   = useState("Todas las categor√≠as");
+  const [subFilter,   setSubFilter]   = useState("Todas las subcategor√≠as");
   const [priceFilter, setPriceFilter] = useState("Todos los precios");
   const [brandFilter, setBrandFilter] = useState("Todas las marcas");
   const [availFilter, setAvailFilter] = useState("Todos");
@@ -32,7 +32,7 @@ export default function Productos() {
   const [loaded, setLoaded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [sortBy, setSortBy] = useState("M·s recientes");
+  const [sortBy, setSortBy] = useState("M√°s recientes");
 
   useEffect(() => {
     getDocs(collection(db, "products"))
@@ -50,18 +50,18 @@ export default function Productos() {
       .finally(() => setLoaded(true));
   }, []);
 
-  // Extraer valores ˙nicos para los dropdowns y pills
-  const categories = ["Todas las categorÌas", ...new Set(products.map((p) => p.category).filter(Boolean))];
-  const subcategories = ["Todas las subcategorÌas", ...new Set(products.map((p) => p.subcategory).filter(Boolean))];
+  // Extraer valores √∫nicos para los dropdowns y pills
+  const categories = ["Todas las categor√≠as", ...new Set(products.map((p) => p.category).filter(Boolean))];
+  const subcategories = ["Todas las subcategor√≠as", ...new Set(products.map((p) => p.subcategory).filter(Boolean))];
   const brands = ["Todas las marcas", ...new Set(products.map((p) => p.brand).filter(Boolean))];
   const availabilities = ["Todos", "Disponible", "Agotado", "Bajo pedido"];
 
-  const counts = { "Todas las categorÌas": products.length };
+  const counts = { "Todas las categor√≠as": products.length };
   products.forEach((p) => { if (p.category) counts[p.category] = (counts[p.category] || 0) + 1; });
 
   const clearFilters = () => {
-    setCatFilter("Todas las categorÌas");
-    setSubFilter("Todas las subcategorÌas");
+    setCatFilter("Todas las categor√≠as");
+    setSubFilter("Todas las subcategor√≠as");
     setPriceFilter("Todos los precios");
     setBrandFilter("Todas las marcas");
     setAvailFilter("Todos");
@@ -81,10 +81,10 @@ export default function Productos() {
       (p.subcategory || "").toLowerCase().includes(q);
 
     // Categoria
-    const matchCat = catFilter === "Todas las categorÌas" || p.category === catFilter;
+    const matchCat = catFilter === "Todas las categor√≠as" || p.category === catFilter;
     
     // Subcategoria
-    const matchSub = subFilter === "Todas las subcategorÌas" || p.subcategory === subFilter;
+    const matchSub = subFilter === "Todas las subcategor√≠as" || p.subcategory === subFilter;
 
     // Marca
     const matchBrand = brandFilter === "Todas las marcas" || p.brand === brandFilter;
@@ -98,7 +98,7 @@ export default function Productos() {
       const priceNum = parseFloat(p.price?.replace(/[^0-9.]/g, '')) || 0;
       if (priceFilter === "Menos de $50") matchPrice = priceNum > 0 && priceNum < 50;
       else if (priceFilter === "$50 - $100") matchPrice = priceNum >= 50 && priceNum <= 100;
-      else if (priceFilter === "M·s de $100") matchPrice = priceNum > 100;
+      else if (priceFilter === "M√°s de $100") matchPrice = priceNum > 100;
     }
 
     return matchText && matchCat && matchSub && matchBrand && matchAvail && matchPrice;
@@ -106,7 +106,7 @@ export default function Productos() {
 
   // Ordenamiento
   visible.sort((a, b) => {
-    if (sortBy === "M·s recientes") {
+    if (sortBy === "M√°s recientes") {
       const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
       const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
       return timeB - timeA;
@@ -140,10 +140,10 @@ export default function Productos() {
         <div className="prod2026__header">
           <div className="prod2026__header-text">
             <div className="home2026__eyebrow-wrap">
-              <span className="home2026__eyebrow" style={{textTransform: 'uppercase', letterSpacing: '0.05em'}}>Cat·logo Completo</span>
+              <span className="home2026__eyebrow" style={{textTransform: 'uppercase', letterSpacing: '0.05em'}}>Cat√°logo Completo</span>
             </div>
             <h1 className="prod2026__title">Nuestros Productos</h1>
-            <p className="prod2026__subtitle">Explora nuestro cat·logo completo. Encuentra productos de calidad para el hogar y tu negocio.</p>
+            <p className="prod2026__subtitle">Explora nuestro cat√°logo completo. Encuentra productos de calidad para el hogar y tu negocio.</p>
           </div>
           
           <div className="prod2026__search">
@@ -166,7 +166,7 @@ export default function Productos() {
             <div className="prod2026__filter-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               <div className="prod2026__filter-info">
-                <span>CATEGORÕA</span>
+                <span>CATEGOR√çA</span>
                 <select value={catFilter} onChange={(e) => { setCatFilter(e.target.value); setCurrentPage(1); }}>
                   {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -175,7 +175,7 @@ export default function Productos() {
             <div className="prod2026__filter-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
               <div className="prod2026__filter-info">
-                <span>SUBCATEGORÕA</span>
+                <span>SUBCATEGOR√çA</span>
                 <select value={subFilter} onChange={(e) => { setSubFilter(e.target.value); setCurrentPage(1); }}>
                   {subcategories.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -189,7 +189,7 @@ export default function Productos() {
                   <option value="Todos los precios">Todos los precios</option>
                   <option value="Menos de $50">Menos de $50</option>
                   <option value="$50 - $100">$50 - $100</option>
-                  <option value="M·s de $100">M·s de $100</option>
+                  <option value="M√°s de $100">M√°s de $100</option>
                 </select>
               </div>
             </div>
@@ -227,15 +227,15 @@ export default function Productos() {
                 className={`prod2026__pill ${catFilter === cat ? "prod2026__pill--active" : ""}`}
                 onClick={() => { setCatFilter(cat); setCurrentPage(1); }}
               >
-                {cat === "Todas las categorÌas" ? "TODOS" : cat}
-                <span className="prod2026__pill-count">{counts[cat] || counts["Todas las categorÌas"]}</span>
+                {cat === "Todas las categor√≠as" ? "TODOS" : cat}
+                <span className="prod2026__pill-count">{counts[cat] || counts["Todas las categor√≠as"]}</span>
               </button>
             ))}
           </div>
           <div className="prod2026__sort">
             <span>Ordenar por:</span>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="M·s recientes">M·s recientes</option>
+              <option value="M√°s recientes">M√°s recientes</option>
               <option value="Precio: Menor a Mayor">Precio: Menor a Mayor</option>
               <option value="Precio: Mayor a Menor">Precio: Mayor a Menor</option>
             </select>
@@ -301,7 +301,7 @@ export default function Productos() {
             </div>
 
             <div className="prod2026__pag-size">
-              <span>Productos por p·gina:</span>
+              <span>Productos por p√°gina:</span>
               <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
                 <option value="8">8</option>
                 <option value="12">12</option>
