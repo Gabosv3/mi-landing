@@ -33,25 +33,6 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Check Hostinger secrets
-        run: |
-          echo "HOST: ${{ secrets.HOSTINGER_HOST != '' }}"
-          echo "PORT: ${{ secrets.HOSTINGER_PORT != '' }}"
-          echo "USERNAME: ${{ secrets.HOSTINGER_USERNAME != '' }}"
-          echo "PASSWORD: ${{ secrets.HOSTINGER_PASSWORD != '' }}"
-
-      - name: Test SSH connection
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y sshpass
-
-          sshpass -p "${{ secrets.HOSTINGER_PASSWORD }}" \
-            ssh \
-            -o StrictHostKeyChecking=no \
-            -p "${{ secrets.HOSTINGER_PORT }}" \
-            "${{ secrets.HOSTINGER_USERNAME }}@${{ secrets.HOSTINGER_HOST }}" \
-            "echo SSH_CONNECTION_OK"
-
       - name: Deploy to Hostinger
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: wangyucode/sftp-upload-action@v2.0.2
