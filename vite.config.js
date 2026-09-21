@@ -48,4 +48,21 @@ export default defineConfig({
     // Redirige todas las rutas desconocidas al index.html (SPA)
     historyApiFallback: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Mejorar code-splitting con función
+        manualChunks(id) {
+          if (id.includes('firebase')) {
+            return 'firebase'
+          }
+          if (id.includes('react-router')) {
+            return 'react-router'
+          }
+        },
+      },
+    },
+    // Incrementar el límite de tamaño para chunks
+    chunkSizeWarningLimit: 1000,
+  },
 })
