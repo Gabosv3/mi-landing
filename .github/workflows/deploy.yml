@@ -3,6 +3,12 @@ name: Build and Deploy to Hostinger
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/deploy.yml'
   pull_request:
     branches: [ main ]
 
@@ -35,4 +41,3 @@ jobs:
         password: ${{ secrets.HOSTINGER_PASSWORD }}
         localDir: ./dist
         remoteDir: domains/distribuidorabriancescomenjivar.com
-        sftp: true
