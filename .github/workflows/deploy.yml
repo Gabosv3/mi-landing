@@ -15,29 +15,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: HOSTINGER
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm install
-    
-    - name: Build project
-      run: npm run build
-    
-    - name: Deploy to Hostinger
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: wangyucode/sftp-upload-action@v2.0.2
-      with:
-        host: ${{ secrets.HOSTINGER_HOST }}
-        port: ${{ secrets.HOSTINGER_PORT }}
-        username: ${{ secrets.HOSTINGER_USERNAME }}
-        password: ${{ secrets.HOSTINGER_PASSWORD }}
-        localDir: ./dist
-        remoteDir: domains/distribuidorabriancescomenjivar.com
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Hostinger
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: wangyucode/sftp-upload-action@v2.0.2
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          localDir: ./dist
+          remoteDir: domains/distribuidorabriancescomenjivar.com/public_html
