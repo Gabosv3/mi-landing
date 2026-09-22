@@ -39,10 +39,26 @@ function localUploadPlugin() {
   }
 }
 
+// Plugin para copiar .htaccess a dist
+function copyHtaccessPlugin() {
+  return {
+    name: 'copy-htaccess',
+    writeBundle() {
+      const source = path.resolve('./public/.htaccess')
+      const dest = path.resolve('./dist/.htaccess')
+      if (fs.existsSync(source)) {
+        fs.copyFileSync(source, dest)
+        console.log('✓ .htaccess copiado a dist/')
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), localUploadPlugin()],
+  plugins: [react(), localUploadPlugin(), copyHtaccessPlugin()],
   server: {
+    host: '0.0.0.0', // Escucha en todas las interfaces de red
     port: 3030,
     strictPort: true,
     // Redirige todas las rutas desconocidas al index.html (SPA)
