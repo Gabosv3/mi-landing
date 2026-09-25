@@ -244,8 +244,10 @@ function CategoriesRail({ categories }) {
       <div className="home2026__categories-grid">
         {categories.map((category) => (
           <Link to="/productos" className="home2026__category-card" key={category.label}>
-            <div className="home2026__category-thumb">
-              <img src={category.image} alt={category.label} loading="lazy" />
+            <div className="home2026__category-thumb" style={category.image ? undefined : { background: category.color || '#6366f1' }}>
+              {category.image
+                ? <img src={category.image} alt={category.label} loading="lazy" />
+                : <span className="home2026__category-thumb-icon">{category.icon}</span>}
             </div>
             <div className="home2026__category-meta">
               <span className="home2026__category-icon">{category.icon}</span>
@@ -469,8 +471,8 @@ export default function Home() {
         if (!snap.empty) {
           setCategories(snap.docs.map((docItem) => {
             const data = docItem.data();
-            return { label: data.name, icon: data.icon || "📦", image: data.image || "" };
-          }).filter((c) => c.image));
+            return { label: data.name, icon: data.icon || "📦", image: data.image || "", color: data.color };
+          }));
         }
       })
       .catch(() => {});
