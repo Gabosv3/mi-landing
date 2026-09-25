@@ -1,17 +1,11 @@
 import express from 'express'
 import multer from 'multer'
 import path from 'path'
-import fs from 'fs'
 import { fileURLToPath } from 'url'
 import admin from 'firebase-admin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST_DIR = path.join(__dirname, 'dist')
-// Fuera de public_html: el deploy solo reemplaza dist/, así las imágenes
-// subidas sobreviven a cada rebuild.
-const UPLOADS_DIR = path.join(__dirname, '..', 'uploads')
-
-fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   admin.initializeApp({
@@ -19,11 +13,21 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   })
 }
 
+// Hostinger recrea todo el sistema de archivos de la app en cada deploy
+// (no solo public_html), asi que cualquier archivo escrito a disco en tiempo
+// de ejecucion se pierde en el siguiente rebuild. Las imagenes se guardan en
+// Firestore (base64) en su lugar, que es una base de datos aparte.
+const db = () => admin.firestore()
+
+// Firestore limita cada documento a 1MiB; base64 agrega ~33% de overhead,
+// asi que el archivo original debe pesar bastante menos que eso.
+const MAX_IMAGE_BYTES = 700 * 1024
+
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'])
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: MAX_IMAGE_BYTES },
   fileFilter: (req, file, cb) => cb(null, ALLOWED_TYPES.has(file.mimetype)),
 })
 
@@ -43,23 +47,51 @@ async function requireAdmin(req, res, next) {
 
 const app = express()
 
-app.use('/imagenes/uploads', express.static(UPLOADS_DIR))
 // index: false porque el index.html lo serviremos aparte, sin cachear,
 // para que nunca quede una version vieja apuntando a assets con hash ya borrados.
 app.use(express.static(DIST_DIR, { index: false }))
 
-app.post('/api/upload', requireAdmin, upload.single('file'), (req, res) => {
+function handleUpload(req, res, next) {
+  upload.single('file')(req, res, (err) => {
+    if (!err) return next()
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'La imagen sigue siendo muy pesada tras comprimirla. Prueba con una foto mas simple o de menor resolucion.' })
+    }
+    res.status(400).json({ error: err.message })
+  })
+}
+
+app.post('/api/upload', requireAdmin, handleUpload, async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se envio ningun archivo' })
-  const ext = (path.extname(req.file.originalname) || '.jpg').toLowerCase()
-  const filename = `img_${Date.now()}${ext}`
-  fs.writeFileSync(path.join(UPLOADS_DIR, filename), req.file.buffer)
-  res.json({ url: `/imagenes/uploads/${filename}` })
+  try {
+    const docRef = await db().collection('uploads').add({
+      data: req.file.buffer.toString('base64'),
+      contentType: req.file.mimetype,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+    res.json({ url: `/api/image/${docRef.id}` })
+  } catch (err) {
+    res.status(500).json({ error: 'Error al guardar la imagen: ' + err.message })
+  }
+})
+
+app.get('/api/image/:id', async (req, res) => {
+  try {
+    const snap = await db().collection('uploads').doc(req.params.id).get()
+    if (!snap.exists) return res.status(404).send('Not found')
+    const { data, contentType } = snap.data()
+    res.set('Content-Type', contentType)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.send(Buffer.from(data, 'base64'))
+  } catch {
+    res.status(500).send('Error loading image')
+  }
 })
 
 // SPA fallback: solo para rutas de navegacion (sin extension), nunca para
-// assets/imagenes que no existen (esas deben dar 404 real, no HTML).
+// assets/api que no existen (esas deben dar 404 real, no HTML).
 app.get(/.*/, (req, res, next) => {
-  if (req.path.startsWith('/assets/') || req.path.startsWith('/imagenes/') || path.extname(req.path)) {
+  if (req.path.startsWith('/assets/') || req.path.startsWith('/api/') || path.extname(req.path)) {
     return next()
   }
   res.set('Cache-Control', 'no-cache')
