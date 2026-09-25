@@ -439,7 +439,11 @@ export function ContentSectionManager({ pageTitle, sectionKeys }) {
     loadSection(activeTab)
       .then((data) => {
         if (data) {
-          setSections((prev) => ({ ...prev, [activeTab]: data }));
+          // Combina con los valores por defecto: un documento guardado antes de
+          // que existiera un campo nuevo (ej. woods/process) no lo trae, y sin
+          // esto el editor lo mostraria vacio en vez de con su valor por defecto.
+          const merged = Array.isArray(data) ? data : { ...cloneDefault(activeTab), ...data };
+          setSections((prev) => ({ ...prev, [activeTab]: merged }));
         }
         setLoaded((prev) => ({ ...prev, [activeTab]: true }));
       })
