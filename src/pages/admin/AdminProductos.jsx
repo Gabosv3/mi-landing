@@ -4,6 +4,7 @@ import {
   deleteDoc, doc, serverTimestamp, orderBy, query as fsQuery,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { uploadImage as uploadFile } from "../../utils/uploadImage";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
@@ -110,28 +111,14 @@ export default function AdminProductos() {
       return next;
     });
 
-  /* -- Subir imagen localmente (igual que en Contenido) -- */
-  const uploadImage = async (item, productId) => {
-    const dataUrl = await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload = (e) => res(e.target.result);
-      reader.onerror = rej;
-      reader.readAsDataURL(item.file);
-    });
-    
+  /* -- Subir imagen a nuestro backend -- */
+  const uploadImage = async (item) => {
     setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: true, progress: 50 } : i));
-    
-    const resp = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: dataUrl, name: `${productId}_${item.file.name}` }),
-    });
-    
-    const json = await resp.json();
-    if (!resp.ok) throw new Error(json.error);
-    
-    setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: false, progress: 100, url: json.url, storagePath: "", file: null } : i));
-    return { url: json.url, path: "" };
+
+    const url = await uploadFile(item.file);
+
+    setImages((prev) => prev.map((i) => i.id === item.id ? { ...i, uploading: false, progress: 100, url, storagePath: "", file: null } : i));
+    return { url, path: "" };
   };
 
   const handleSave = async (e) => {
@@ -139,14 +126,13 @@ export default function AdminProductos() {
     if (!form.name || !form.price || !form.category) return alert("Faltan campos (Nombre, Precio, Categoria)");
     setSaving(true);
     try {
-      const productId = editingId || `prod_${Date.now()}`;
       const finalCategory = form.category === "custom" ? form.customCategory.trim() : form.category;
 
       /* Subir solo las imagenes nuevas (que tienen file) */
       const finalImages = await Promise.all(
         images.map(async (img) => {
           if (img.file) {
-            const { url, path } = await uploadImage(img, productId);
+            const { url, path } = await uploadImage(img);
             return { url, path, isPrimary: img.isPrimary };
           }
           return { url: img.url, path: img.storagePath || "", isPrimary: img.isPrimary };

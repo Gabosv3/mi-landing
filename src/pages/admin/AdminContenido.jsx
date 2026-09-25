@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { uploadImage } from "../../utils/uploadImage";
 import { DEFAULT_CONTENT } from "../../hooks/useContent";
 
 const TABS = [
@@ -142,25 +143,13 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
 
   const f = (key) => (val) => onChange({ ...data, [key]: val });
 
-  /* Convierte archivo a base64 y lo envía al middleware local de Vite */
+  /* Sube el archivo a nuestro backend */
   const uploadLocal = async (file, key, applyUrl) => {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [key]: true }));
     try {
-      const dataUrl = await new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = (e) => res(e.target.result);
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-      const resp = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: dataUrl, name: file.name }),
-      });
-      const json = await resp.json();
-      if (!resp.ok) throw new Error(json.error);
-      applyUrl(json.url);
+      const url = await uploadImage(file);
+      applyUrl(url);
     } catch (err) {
       alert('Error al guardar imagen: ' + err.message);
     } finally {
