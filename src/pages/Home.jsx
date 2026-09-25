@@ -450,7 +450,7 @@ function CtaBanner({ content }) {
 
 export default function Home() {
   const [products, setProducts] = useState(PRODUCT_PLACEHOLDER);
-  const [categories, setCategories] = useState(CATEGORY_FALLBACK);
+  const [categories, setCategories] = useState(null);
   const { content: hero } = useContent("hero");
   const { content: features } = useContent("features");
   const { content: about } = useContent("about");
@@ -468,14 +468,12 @@ export default function Home() {
 
     getDocs(query(collection(db, "categories"), orderBy("name")))
       .then((snap) => {
-        if (!snap.empty) {
-          setCategories(snap.docs.map((docItem) => {
-            const data = docItem.data();
-            return { label: data.name, icon: data.icon || "📦", image: data.image || "", color: data.color };
-          }));
-        }
+        setCategories(snap.empty ? CATEGORY_FALLBACK : snap.docs.map((docItem) => {
+          const data = docItem.data();
+          return { label: data.name, icon: data.icon || "📦", image: data.image || "", color: data.color };
+        }));
       })
-      .catch(() => {});
+      .catch(() => setCategories(CATEGORY_FALLBACK));
   }, []);
 
   return (
@@ -483,7 +481,7 @@ export default function Home() {
       <HomeHero content={hero} />
 
       <div className="home2026__shell">
-        <CategoriesRail categories={categories.length ? categories : CATEGORY_FALLBACK} />
+        {categories && <CategoriesRail categories={categories} />}
         <AdvantageStrip items={features} />
       </div>
 
