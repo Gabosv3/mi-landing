@@ -1,20 +1,85 @@
-﻿import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-const LINKS = [
-  { to: "/admin/dashboard",   label: "Dashboard",              icon: "▣" },
-  { to: "/admin/home",        label: "Home",                   icon: "⌂" },
-  { to: "/admin/nosotros",    label: "Nosotros",                icon: "❐" },
-  { to: "/admin/contacto",    label: "Contacto",                icon: "✉" },
-  { to: "/admin/muebles",     label: "Muebles a la Medida",     icon: "◧" },
-  { to: "/admin/categorias",  label: "Categorías",              icon: "◈" },
-  { to: "/admin/productos",   label: "Productos",               icon: "❐" },
-  { to: "/admin/mensajes",    label: "Mensajes",                icon: "◉" },
+const NAV = [
+  { to: "/admin/dashboard", label: "Dashboard", icon: "▣" },
+  {
+    label: "Sitio Web",
+    icon: "◆",
+    children: [
+      { to: "/admin/home",     label: "Home",                icon: "⌂" },
+      { to: "/admin/nosotros", label: "Nosotros",             icon: "❐" },
+      { to: "/admin/contacto", label: "Contacto",             icon: "✉" },
+      { to: "/admin/muebles",  label: "Muebles a la Medida",  icon: "◧" },
+    ],
+  },
+  {
+    label: "Catálogo",
+    icon: "◈",
+    children: [
+      { to: "/admin/categorias", label: "Categorías", icon: "◈" },
+      { to: "/admin/productos",  label: "Productos",  icon: "❐" },
+    ],
+  },
+  { to: "/admin/mensajes", label: "Mensajes", icon: "◉" },
 ];
+
+function NavItem({ to, label, icon }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `as-nav__link${isActive ? " as-nav__link--active" : ""}`
+      }
+    >
+      <span className="as-nav__icon">{icon}</span>
+      <span>{label}</span>
+    </NavLink>
+  );
+}
+
+function NavGroup({ label, icon, children, isOpen, onToggle, hasActiveChild }) {
+  return (
+    <div className="as-nav__group">
+      <button
+        type="button"
+        className={`as-nav__group-header${hasActiveChild ? " as-nav__group-header--active" : ""}`}
+        onClick={onToggle}
+      >
+        <span className="as-nav__icon">{icon}</span>
+        <span className="as-nav__group-label">{label}</span>
+        <span className={`as-nav__chevron${isOpen ? " as-nav__chevron--open" : ""}`}>›</span>
+      </button>
+      {isOpen && (
+        <div className="as-nav__group-children">
+          {children.map((child) => (
+            <NavItem key={child.to} {...child} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const groupHasActiveChild = (group) =>
+    group.children?.some((c) => location.pathname.startsWith(c.to)) ?? false;
+
+  const [openGroups, setOpenGroups] = useState(() => {
+    const initial = {};
+    NAV.forEach((item) => {
+      if (item.children) initial[item.label] = groupHasActiveChild(item);
+    });
+    return initial;
+  });
+
+  const toggleGroup = (label) =>
+    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
 
   const handleLogout = async () => {
     await logout();
@@ -37,18 +102,19 @@ export default function AdminSidebar() {
       {/* Nav */}
       <nav className="as-nav">
         <p className="as-nav__label">Menú</p>
-        {LINKS.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `as-nav__link${isActive ? " as-nav__link--active" : ""}`
-            }
-          >
-            <span className="as-nav__icon">{icon}</span>
-            <span>{label}</span>
-          </NavLink>
-        ))}
+        {NAV.map((item) =>
+          item.children ? (
+            <NavGroup
+              key={item.label}
+              {...item}
+              isOpen={!!openGroups[item.label]}
+              onToggle={() => toggleGroup(item.label)}
+              hasActiveChild={groupHasActiveChild(item)}
+            />
+          ) : (
+            <NavItem key={item.to} {...item} />
+          )
+        )}
       </nav>
 
       {/* Footer */}
