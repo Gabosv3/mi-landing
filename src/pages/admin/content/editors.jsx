@@ -186,21 +186,26 @@ export function StatsEditor({ data, onChange, onSave, saving, saved }) {
 }
 
 export function AboutEditor({ data, onChange, onSave, saving, saved }) {
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState({});
   const f = (key) => (val) => onChange({ ...data, [key]: val });
   const handleValues = (val) => onChange({ ...data, values: val.split(",").map((s) => s.trim()).filter(Boolean) });
 
-  const uploadAboutImage = async (file) => {
+  const uploadTo = async (file, key, applyUrl) => {
     if (!file) return;
-    setUploading(true);
+    setUploading((prev) => ({ ...prev, [key]: true }));
     try {
       const url = await uploadImage(file);
-      onChange({ ...data, image: url });
+      applyUrl(url);
     } catch (err) {
       alert('Error al guardar imagen: ' + err.message);
     } finally {
-      setUploading(false);
+      setUploading((prev) => ({ ...prev, [key]: false }));
     }
+  };
+
+  const updateGalleryImage = (i, url) => {
+    const next = (data.gallery || []).map((g, idx) => idx === i ? { ...g, img: url } : g);
+    onChange({ ...data, gallery: next });
   };
 
   return (
@@ -227,7 +232,25 @@ export function AboutEditor({ data, onChange, onSave, saving, saved }) {
         <Field label="Frase destacada" value={data.highlight} onChange={f("highlight")} />
         <Field label="Texto de la insignia (ej: +15 AÑOS)" value={data.badgeYears} onChange={f("badgeYears")} />
         <Field label="Texto debajo de la insignia" value={data.badgeLabel} onChange={f("badgeLabel")} />
-        <ImageField label="Imagen de la sección" value={data.image} uploading={uploading} onUpload={uploadAboutImage} />
+        <ImageField
+          label="Foto principal (aparece en Inicio y en Nosotros)"
+          value={data.image}
+          uploading={uploading.image}
+          onUpload={(file) => uploadTo(file, 'image', (url) => onChange({ ...data, image: url }))}
+        />
+      </div>
+
+      <div className="admin-editor">
+        <p className="admin-editor__title">Galería de fotos (página Nosotros)</p>
+        {(data.gallery || []).map((g, i) => (
+          <ImageField
+            key={i}
+            label={g.label}
+            value={g.img}
+            uploading={uploading[`gallery_${i}`]}
+            onUpload={(file) => uploadTo(file, `gallery_${i}`, (url) => updateGalleryImage(i, url))}
+          />
+        ))}
       </div>
 
       <div className="admin-editor" style={{ background: 'transparent', boxShadow: 'none' }}>

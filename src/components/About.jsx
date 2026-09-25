@@ -59,7 +59,20 @@ export default function About() {
     values = ['Confianza', 'Calidad', 'Puntualidad', 'Atención Personalizada', 'Mejora Continua', 'Compromiso'],
     stats = [],
     foundingYear = '2009',
+    image = '/imagenes/Home/Home1.png',
+    gallery = [],
   } = content;
+
+  const galleryDefaults = [
+    { label: 'Bodega y logística', img: '/imagenes/Home/Home1.png' },
+    { label: 'Atención al cliente', img: '/imagenes/Home/Home1.png' },
+    { label: 'Productos para el hogar', img: '/imagenes/Home/Home1.png' },
+    { label: 'Amplio inventario', img: '/imagenes/Home/Home1.png' },
+  ];
+  const galleryItems = galleryDefaults.map((def, i) => ({
+    label: gallery[i]?.label || def.label,
+    img: gallery[i]?.img || def.img,
+  }));
 
   const defaultParagraphs = [
     'Desde 2009, Distribuidora Briancesco Menjívar ha trabajado para convertirse en un aliado estratégico para familias, negocios y emprendedores de todo El Salvador.',
@@ -132,7 +145,7 @@ export default function About() {
           </div>
 
           <div className="about__hero-visual about__hero-right" aria-hidden="true">
-            <img src="/imagenes/Home/Home1.png" alt="Distribuidora BM - sede y logística" className="about__hero-img" />
+            <img src={image} alt="Distribuidora BM - sede y logística" className="about__hero-img" />
 
             <div className="about__building" aria-hidden="true">
               <div className="about__building-top" />
@@ -162,18 +175,15 @@ export default function About() {
           </article>
 
           <div className={`about__gallery ${isVisible ? 'fade-in-up delay-2' : ''}`} aria-hidden="true">
-            <div className="about__gallery-card about__gallery-card--warehouse">
-              <span>Bodega y logística</span>
-            </div>
-            <div className="about__gallery-card about__gallery-card--service">
-              <span>Atención al cliente</span>
-            </div>
-            <div className="about__gallery-card about__gallery-card--home">
-              <span>Productos para el hogar</span>
-            </div>
-            <div className="about__gallery-card about__gallery-card--store">
-              <span>Amplio inventario</span>
-            </div>
+            {galleryItems.map((item, i) => (
+              <div
+                className="about__gallery-card"
+                key={i}
+                style={{ backgroundImage: `url('${item.img}')` }}
+              >
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -660,11 +670,6 @@ export default function About() {
           letter-spacing: .04em;
           text-transform: uppercase;
         }
-
-        .about__gallery-card--warehouse { background-image: url('/imagenes/Home/Home1.png'); }
-        .about__gallery-card--service   { background-image: url('/imagenes/Home/Home1.png'); filter: saturate(.95) contrast(.98); }
-        .about__gallery-card--home      { background-image: url('/imagenes/Home/Home1.png'); filter: brightness(.98); }
-        .about__gallery-card--store     { background-image: url('/imagenes/Home/Home1.png'); filter: contrast(.95) saturate(.9); }
 
         .about__stats {
           display: grid;

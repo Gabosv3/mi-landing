@@ -46,12 +46,19 @@ export const DEFAULT_CONTENT = {
     ],
     foundingYear: '2009',
     foundingLabel: 'Año de fundación',
-    image: 'https://images.unsplash.com/photo-1556761175-5973ef0f18d7?w=800&q=80',
+    image: '/imagenes/Home/Home1.png',
     previewText1: 'Distribuidora Briancesco Menjivar nació con la misión de conectar a los mejores proveedores con los negocios que más lo necesitan.',
     previewText2: 'Desde 2009, trabajamos cada día para ofrecer productos de calidad, atención personalizada y soluciones confiables que generan valor y confianza.',
     highlight: 'Nuestra experiencia es tu tranquilidad.',
     badgeYears: '+15 AÑOS',
     badgeLabel: 'DE EXPERIENCIA',
+    /* Fotos de la galeria en la pagina completa de Nosotros */
+    gallery: [
+      { label: 'Bodega y logística', img: '' },
+      { label: 'Atención al cliente', img: '' },
+      { label: 'Productos para el hogar', img: '' },
+      { label: 'Amplio inventario', img: '' },
+    ],
   },
   cta: {
     title: '¿Listo para hacer tu pedido?',
