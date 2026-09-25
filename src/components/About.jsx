@@ -319,6 +319,11 @@ export default function About() {
           padding: 5rem 0 4rem;
         }
 
+        .about__hero-content,
+        .about__hero-visual {
+          min-width: 0;
+        }
+
         .about__eyebrow {
           display: inline-block;
           color: var(--primary);
@@ -396,11 +401,38 @@ export default function About() {
 
         .about__hero-ctas {
           display: flex;
+          flex-wrap: wrap;
           gap: 0.9rem;
           margin-top: 1.4rem;
         }
 
         .about__hero-ctas .about__btn { padding: 0.85rem 1.4rem; border-radius: 10px; }
+
+        .about__hero-badges {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.6rem;
+          margin: 0.4rem 0 0;
+        }
+
+        .about__badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.4rem 0.9rem;
+          border-radius: 999px;
+          font-size: 0.78rem;
+          font-weight: 700;
+          background: var(--gold-soft);
+          color: var(--primary-dark);
+          border: 1px solid var(--border);
+          white-space: nowrap;
+        }
+
+        .about__badge--muted {
+          background: rgba(0,0,0,0.04);
+          color: var(--muted);
+          border-color: rgba(0,0,0,0.08);
+        }
 
         .about__hero-visual {
           min-height: 330px;
@@ -555,6 +587,10 @@ export default function About() {
           padding: 2.6rem 0 2rem;
         }
 
+        .about__history-grid > * {
+          min-width: 0;
+        }
+
         .about__section-title,
         .about__center-title {
           display: flex;
@@ -684,6 +720,10 @@ export default function About() {
           padding: .4rem 0 2.2rem;
         }
 
+        .about__mission-vision > * {
+          min-width: 0;
+        }
+
         .about__mv-card {
           display: grid;
           grid-template-columns: 70px 1fr;
@@ -694,6 +734,10 @@ export default function About() {
           padding: 2rem;
           overflow: hidden;
           position: relative;
+        }
+
+        .about__mv-card > div {
+          min-width: 0;
         }
 
         .about__mv-card::after {
@@ -761,6 +805,10 @@ export default function About() {
           background: rgba(255,255,255,.82);
           box-shadow: 0 14px 36px rgba(28,24,18,.045);
           transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .about__value-card > div {
+          min-width: 0;
         }
 
         .about__value-card:hover {

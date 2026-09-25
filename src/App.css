@@ -2952,6 +2952,9 @@
   cursor: pointer;
   font-family: inherit;
   appearance: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .prod2026__filter-info select:focus {
@@ -3264,6 +3267,12 @@
 @media (max-width: 680px) {
   .navbar__right {
     display: none;
+  }
+
+  .prod2026__filter-item {
+    width: 100%;
+    min-width: 100%;
+    flex: 1 1 100%;
   }
 }
 
@@ -3702,6 +3711,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 /* Category badge in table */
 .adp-cat-badge {
   display: inline-block;
+  max-width: 100%;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -3711,6 +3721,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   background: color-mix(in srgb, var(--cat-color) 12%, transparent);
   color: var(--cat-color);
   border: 1px solid color-mix(in srgb, var(--cat-color) 30%, transparent);
+  overflow-wrap: break-word;
 }
 
 /* Product thumbnail in table */
@@ -3771,6 +3782,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
   border-left: 4px solid var(--cat-color, #6366f1);
   transition: box-shadow 0.2s;
 }
@@ -3781,6 +3793,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 
 .adc-card__info {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -3790,6 +3803,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--adm-text);
+  overflow-wrap: break-word;
 }
 
 .adc-card__actions {
