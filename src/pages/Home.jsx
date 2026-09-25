@@ -1,7 +1,7 @@
 ﻿/* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { collection, getDocs, limit, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useContent } from "../hooks/useContent";
 
@@ -152,53 +152,36 @@ const PRODUCT_PLACEHOLDER = [
 ];
 
 const CATEGORY_FALLBACK = [
-  { label: "Cocina", icon: "kitchen", image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80" },
-  { label: "Muebles", icon: "sofa", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80" },
-  { label: "Electrodomésticos", icon: "appliance", image: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=600&q=80" },
-  { label: "Habitación", icon: "bedroom", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80&sat=-10" },
-  { label: "Comedor", icon: "dining", image: "https://images.unsplash.com/photo-1449247709967-d4461a6a6103?w=600&q=80" },
-  { label: "Organización", icon: "box", image: "https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=600&q=80" },
-  { label: "Limpieza", icon: "clean", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80" },
+  { label: "Cocina", icon: "🍳", image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80" },
+  { label: "Muebles", icon: "🛋️", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80" },
+  { label: "Electrodomésticos", icon: "⚡", image: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=600&q=80" },
+  { label: "Habitación", icon: "🛏️", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80&sat=-10" },
+  { label: "Comedor", icon: "🍽️", image: "https://images.unsplash.com/photo-1449247709967-d4461a6a6103?w=600&q=80" },
+  { label: "Organización", icon: "📦", image: "https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=600&q=80" },
+  { label: "Limpieza", icon: "🧹", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80" },
 ];
 
-const HOME_HERO_CONTENT = {
-  eyebrow: "Todo para tu hogar",
-  title: ["Productos para", "hacer de tu hogar", "el mejor lugar"],
-  subtitle: "Encuentra una gran variedad de productos para tu hogar con la calidad, precio y atención que mereces.",
-  primary: "Ver productos",
-  secondary: "Cotizar ahora",
-  trust: [
-    { icon: "quality", label: "Calidad Garantizada" },
-    { icon: "shipping", label: "Envíos Confiables" },
-    { icon: "support", label: "Atención Personalizada" },
-    { icon: "price", label: "Precios Competitivos" },
-  ],
-};
+function HomeHero({ content }) {
+  const titleLines = (content.title || "").split("\n").filter(Boolean);
+  const noteLines = (content.noteText || "").split("\n").filter(Boolean);
+  const trust = content.trust || [];
 
-const HOME_ADVANTAGES = [
-  { key: "quality", title: "Productos de Calidad", desc: "Seleccionamos lo mejor para tu hogar." },
-  { key: "shipping", title: "Entregas Rápidas", desc: "Recibe tus productos en la puerta de tu casa." },
-  { key: "support", title: "Atención Personalizada", desc: "Estamos aquí para ayudarte en cada paso." },
-  { key: "price", title: "Cobertura en Todo El Salvador", desc: "Llegamos a donde estés." },
-];
-
-function HomeHero({ products }) {
   return (
     <section className="home2026__hero" id="inicio">
       <div className="home2026__hero-inner">
         <div className="home2026__hero-copy">
           <div className="home2026__eyebrow-wrap">
             <span className="home2026__eyebrow-line" />
-            <span className="home2026__eyebrow">{HOME_HERO_CONTENT.eyebrow}</span>
+            <span className="home2026__eyebrow">{content.badge}</span>
           </div>
 
           <h1 className="home2026__title">
-            {HOME_HERO_CONTENT.title.map((line) => (
+            {titleLines.map((line) => (
               <span key={line} className="home2026__title-line">{line}</span>
             ))}
           </h1>
 
-          <p className="home2026__subtitle">{HOME_HERO_CONTENT.subtitle}</p>
+          <p className="home2026__subtitle">{content.subtitle}</p>
 
           <div className="home2026__actions">
             <Link to="/productos" className="home2026__btn home2026__btn--gold">
@@ -207,21 +190,21 @@ function HomeHero({ products }) {
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
-              {HOME_HERO_CONTENT.primary}
+              {content.cta_primary}
             </Link>
             <Link to="/contacto" className="home2026__btn home2026__btn--ghost">
               <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"17px",height:"17px",flexShrink:0}} aria-hidden="true">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                 <path d="M11.99 2C6.472 2 2 6.472 2 11.99c0 1.79.473 3.472 1.301 4.931L2 22l5.232-1.27A9.943 9.943 0 0 0 11.99 22C17.508 22 22 17.528 22 11.99 22 6.472 17.508 2 11.99 2zm0 18c-1.626 0-3.148-.444-4.452-1.217l-.318-.19-3.106.753.782-3.02-.207-.33A7.96 7.96 0 0 1 4 11.99C4 7.576 7.576 4 11.99 4 16.413 4 20 7.587 20 11.99 20 16.413 16.413 20 11.99 20z"/>
               </svg>
-              {HOME_HERO_CONTENT.secondary}
+              {content.cta_secondary}
             </Link>
           </div>
         </div>
 
         <div className="home2026__hero-visual">
           <img
-            src="/imagenes/Home/Home1.png"
+            src={content.image || "/imagenes/Home/Home1.png"}
             alt="Espacio de cocina"
             className="home2026__hero-bg"
           />
@@ -229,14 +212,15 @@ function HomeHero({ products }) {
           <div className="home2026__hero-note">
             <span className="home2026__hero-note-icon">{HOME_ICONS.home}</span>
             <p>
-              Todo lo que necesitas<br/> para tu hogar, en un <br/>
-              <strong>solo lugar.</strong>
+              {noteLines.map((line, i) => (
+                <span key={i}>{line}{i < noteLines.length - 1 ? <br/> : null}</span>
+              ))}
             </p>
           </div>
         </div>
 
         <div className="home2026__trust-row">
-          {HOME_HERO_CONTENT.trust.map((item) => (
+          {trust.map((item) => (
             <div className="home2026__trust-item" key={item.label}>
               <span className="home2026__trust-icon">{HOME_ICONS[item.icon]}</span>
               <span>{item.label}</span>
@@ -264,7 +248,7 @@ function CategoriesRail({ categories }) {
               <img src={category.image} alt={category.label} loading="lazy" />
             </div>
             <div className="home2026__category-meta">
-              <span className="home2026__category-icon">{HOME_ICONS[category.icon]}</span>
+              <span className="home2026__category-icon">{category.icon}</span>
               <strong>{category.label}</strong>
             </div>
           </Link>
@@ -274,12 +258,12 @@ function CategoriesRail({ categories }) {
   );
 }
 
-function AdvantageStrip({ featureItems }) {
+function AdvantageStrip({ items }) {
   return (
     <section className="home2026__advantage-strip">
-      {HOME_ADVANTAGES.map((item) => (
+      {items.map((item) => (
         <article className="home2026__advantage-item" key={item.title}>
-          <span className="home2026__advantage-icon">{HOME_ICONS[item.key]}</span>
+          <span className="home2026__advantage-icon">{item.icon}</span>
           <div>
             <strong>{item.title}</strong>
             <p>{item.desc}</p>
@@ -366,7 +350,24 @@ function ProductsPreview({ products }) {
   );
 }
 
-function AboutPreview() {
+const ABOUT_STAT_ICONS = [
+  <svg key="people" viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>,
+  <svg key="box" viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+  </svg>,
+  <svg key="calendar" viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>,
+  <svg key="pin" viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+  </svg>,
+];
+
+function AboutPreview({ content, stats }) {
+  const subtitleLines = (content.subtitle || "").split("\n").filter(Boolean);
   return (
     <section className="home2026__about" id="nosotros-preview">
       <div className="home2026__shell">
@@ -376,23 +377,24 @@ function AboutPreview() {
               <span className="home2026__eyebrow-line"></span>
               <span className="home2026__eyebrow" style={{textTransform: 'uppercase', letterSpacing: '0.05em'}}>Nuestra Historia</span>
             </div>
-            <h2 className="home2026__about-title">Quiénes Somos</h2>
+            <h2 className="home2026__about-title">{content.title}</h2>
             <h3 className="home2026__about-subtitle">
               <span className="home2026__about-subtitle-line"></span>
-              Más de 15 años<br/>
-              impulsando hogares y negocios
+              {subtitleLines.map((line, i) => (
+                <span key={i}>{line}{i < subtitleLines.length - 1 ? <br/> : null}</span>
+              ))}
             </h3>
-            <p className="home2026__about-p">Distribuidora Briancesco Menjivar nació con la misión de conectar a los mejores proveedores con los negocios que más lo necesitan.</p>
-            <p className="home2026__about-p">Desde 2009, trabajamos cada día para ofrecer productos de calidad, atención personalizada y soluciones confiables que generan valor y confianza.</p>
-            <p className="home2026__about-highlight">Nuestra experiencia es tu tranquilidad.</p>
-            
+            <p className="home2026__about-p">{content.previewText1}</p>
+            <p className="home2026__about-p">{content.previewText2}</p>
+            <p className="home2026__about-highlight">{content.highlight}</p>
+
             <Link to="/nosotros" className="home2026__btn home2026__btn--gold home2026__about-btn">
               CONOCE MÁS DE NOSOTROS &rarr;
             </Link>
           </div>
-          
+
           <div className="home2026__about-visual">
-            <img src="https://images.unsplash.com/photo-1556761175-5973ef0f18d7?w=800&q=80" alt="Equipo BM" className="home2026__about-img" />
+            <img src={content.image} alt="Equipo BM" className="home2026__about-img" />
             <div className="home2026__about-badge">
               <div className="home2026__about-badge-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
@@ -401,85 +403,43 @@ function AboutPreview() {
                 </svg>
               </div>
               <div className="home2026__about-badge-text">
-                <strong style={{fontFamily: 'var(--font-display)'}}>+15 AÑOS</strong>
-                <span>DE EXPERIENCIA</span>
+                <strong style={{fontFamily: 'var(--font-display)'}}>{content.badgeYears}</strong>
+                <span>{content.badgeLabel}</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="home2026__about-stats">
-          <div className="home2026__astat">
-            <div className="home2026__astat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div className="home2026__astat-info">
-              <strong style={{fontFamily: 'var(--font-display)'}}>+500</strong>
-              <span>Clientes satisfechos</span>
-            </div>
-          </div>
-
-          <div className="home2026__astat-divider"></div>
-
-          <div className="home2026__astat">
-            <div className="home2026__astat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
-              </svg>
-            </div>
-            <div className="home2026__astat-info">
-              <strong style={{fontFamily: 'var(--font-display)'}}>+5,000</strong>
-              <span>Productos disponibles</span>
-            </div>
-          </div>
-
-          <div className="home2026__astat-divider"></div>
-
-          <div className="home2026__astat">
-            <div className="home2026__astat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
-                <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="home2026__astat-info">
-              <strong style={{fontFamily: 'var(--font-display)'}}>+15</strong>
-              <span>Años de experiencia</span>
-            </div>
-          </div>
-
-          <div className="home2026__astat-divider"></div>
-
-          <div className="home2026__astat">
-            <div className="home2026__astat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
-              </svg>
-            </div>
-            <div className="home2026__astat-info">
-              <strong style={{fontFamily: 'var(--font-display)'}}>Cobertura</strong>
-              <span>Nacional</span>
-            </div>
-          </div>
+          {stats.slice(0, 4).map((stat, i) => (
+            <Fragment key={stat.label}>
+              {i > 0 && <div className="home2026__astat-divider"></div>}
+              <div className="home2026__astat">
+                <div className="home2026__astat-icon">{ABOUT_STAT_ICONS[i]}</div>
+                <div className="home2026__astat-info">
+                  <strong style={{fontFamily: 'var(--font-display)'}}>{stat.number}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              </div>
+            </Fragment>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function CtaBanner() {
+function CtaBanner({ content }) {
   return (
     <section className="cta-banner">
       <div className="cta-banner__inner">
         <div className="cta-banner__text">
-          <h2>¿Listo para hacer tu pedido?</h2>
-          <p>Contáctanos hoy y recibe atención personalizada de nuestro equipo.</p>
+          <h2>{content.title}</h2>
+          <p>{content.text}</p>
         </div>
         <div className="cta-banner__actions">
-          <Link to="/contacto" className="btn btn--solid">Solicitar Cotización</Link>
-          <Link to="/productos" className="btn btn--outline cta-banner__link">Ver Catálogo</Link>
+          <Link to="/contacto" className="btn btn--solid">{content.cta_primary}</Link>
+          <Link to="/productos" className="btn btn--outline cta-banner__link">{content.cta_secondary}</Link>
         </div>
       </div>
     </section>
@@ -488,6 +448,12 @@ function CtaBanner() {
 
 export default function Home() {
   const [products, setProducts] = useState(PRODUCT_PLACEHOLDER);
+  const [categories, setCategories] = useState(CATEGORY_FALLBACK);
+  const { content: hero } = useContent("hero");
+  const { content: features } = useContent("features");
+  const { content: about } = useContent("about");
+  const { content: cta } = useContent("cta");
+  const { content: stats } = useContent("stats");
 
   useEffect(() => {
     getDocs(query(collection(db, "products"), limit(6)))
@@ -497,20 +463,31 @@ export default function Home() {
         }
       })
       .catch(() => {});
+
+    getDocs(query(collection(db, "categories"), orderBy("name")))
+      .then((snap) => {
+        if (!snap.empty) {
+          setCategories(snap.docs.map((docItem) => {
+            const data = docItem.data();
+            return { label: data.name, icon: data.icon || "📦", image: data.image || "" };
+          }).filter((c) => c.image));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
     <main className="home2026">
-      <HomeHero products={products} />
-      
+      <HomeHero content={hero} />
+
       <div className="home2026__shell">
-        <CategoriesRail categories={CATEGORY_FALLBACK} />
-        <AdvantageStrip />
+        <CategoriesRail categories={categories.length ? categories : CATEGORY_FALLBACK} />
+        <AdvantageStrip items={features} />
       </div>
 
       <ProductsPreview products={products} />
-      <AboutPreview />
-      <CtaBanner />
+      <AboutPreview content={about} stats={stats} />
+      <CtaBanner content={cta} />
     </main>
   );
 }

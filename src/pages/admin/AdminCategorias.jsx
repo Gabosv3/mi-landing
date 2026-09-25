@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection, getDocs, addDoc, updateDoc,
   deleteDoc, doc, serverTimestamp, orderBy, query,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { uploadImage } from "../../utils/uploadImage";
 
 const PALETTE = [
   "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4",
@@ -13,7 +14,7 @@ const PALETTE = [
 
 const ICONS = ["🧹", "🍽️", "🛏️", "🚿", "🛋️", "⚡", "📦", "🏠", "🌿", "✨", "🔧", "📋"];
 
-const EMPTY_FORM = { name: "", color: PALETTE[0], icon: "📦" };
+const EMPTY_FORM = { name: "", color: PALETTE[0], icon: "📦", image: "" };
 
 export default function AdminCategorias() {
   const [categories, setCategories] = useState([]);
@@ -21,6 +22,8 @@ export default function AdminCategorias() {
   const [editingId,  setEditingId]  = useState(null);
   const [showForm,   setShowForm]   = useState(false);
   const [saving,     setSaving]     = useState(false);
+  const [uploading,  setUploading]  = useState(false);
+  const fileRef = useRef(null);
 
   const load = async () => {
     try {
@@ -40,9 +43,22 @@ export default function AdminCategorias() {
   };
 
   const openEdit = (cat) => {
-    setForm({ name: cat.name, color: cat.color || PALETTE[0], icon: cat.icon || "📦" });
+    setForm({ name: cat.name, color: cat.color || PALETTE[0], icon: cat.icon || "📦", image: cat.image || "" });
     setEditingId(cat.id);
     setShowForm(true);
+  };
+
+  const uploadCategoryImage = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setForm((p) => ({ ...p, image: url }));
+    } catch (err) {
+      alert("Error al guardar imagen: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -50,7 +66,7 @@ export default function AdminCategorias() {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      const data = { name: form.name.trim(), color: form.color, icon: form.icon, updatedAt: serverTimestamp() };
+      const data = { name: form.name.trim(), color: form.color, icon: form.icon, image: form.image || "", updatedAt: serverTimestamp() };
       if (editingId) {
         await updateDoc(doc(db, "categories", editingId), data);
       } else {
@@ -137,6 +153,21 @@ export default function AdminCategorias() {
             </div>
           </div>
 
+          {/* Imagen */}
+          <div className="admin-form-group">
+            <label>Imagen de la categoría</label>
+            {form.image && (
+              <img src={form.image} alt={form.name} style={{ width: '100%', height: 140, objectFit: 'cover', marginBottom: 8, borderRadius: 6 }} />
+            )}
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+              onChange={(e) => uploadCategoryImage(e.target.files[0])} />
+            <button type="button" className="admin-btn" style={{ width: '100%' }}
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}>
+              {uploading ? 'Guardando…' : form.image ? '🔄 Cambiar imagen' : '⬆ Seleccionar imagen'}
+            </button>
+          </div>
+
           {/* Preview */}
           <div className="adc-preview">
             <span className="adc-preview__label">Vista previa:</span>
@@ -170,7 +201,9 @@ export default function AdminCategorias() {
         <div className="adc-grid">
           {categories.map((cat) => (
             <div className="adc-card" key={cat.id} style={{ "--cat-color": cat.color || "#6366f1" }}>
-              <div className="adc-card__icon">{cat.icon || "📦"}</div>
+              {cat.image
+                ? <img src={cat.image} alt={cat.name} className="adc-card__thumb" />
+                : <div className="adc-card__icon">{cat.icon || "📦"}</div>}
               <div className="adc-card__info">
                 <span className="adc-card__name">{cat.name}</span>
                 <span className="adp-cat-badge" style={{ "--cat-color": cat.color || "#6366f1" }}>

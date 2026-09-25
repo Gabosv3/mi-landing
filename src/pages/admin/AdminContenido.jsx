@@ -9,9 +9,12 @@ const TABS = [
   { key: "features", label: "Caracteristicas", icon: "✦" },
   { key: "stats",    label: "Estadisticas",    icon: "◉" },
   { key: "about",    label: "Nosotros",        icon: "❐" },
+  { key: "cta",      label: "Llamado a accion", icon: "➜" },
   { key: "contact",  label: "Contacto",        icon: "✉" },
   { key: "muebles",  label: "Muebles",         icon: "◧" },
 ];
+
+const TRUST_ICONS = ["quality", "shipping", "support", "price", "home"];
 
 /* ── helpers ──────────────────────────────────────────────── */
 const isArray = (section) => section === "features" || section === "stats";
@@ -43,6 +46,25 @@ function Field({ label, value, hint, onChange, long = false }) {
   );
 }
 
+function ImageField({ label, value, uploading, onUpload }) {
+  const fileRef = useRef(null);
+  return (
+    <div className="admin-form-group">
+      <label>{label}</label>
+      {value && (
+        <img src={value} alt={label} style={{ width: '100%', height: 180, objectFit: 'cover', marginBottom: 8, borderRadius: 6 }} />
+      )}
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+        onChange={(e) => onUpload(e.target.files[0])} />
+      <button type="button" className="admin-btn" style={{ width: '100%' }}
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}>
+        {uploading ? 'Guardando…' : value ? '🔄 Cambiar imagen' : '⬆ Seleccionar imagen'}
+      </button>
+    </div>
+  );
+}
+
 function SaveBar({ onSave, saving, saved }) {
   return (
     <div className="admin-editor__actions">
@@ -56,16 +78,62 @@ function SaveBar({ onSave, saving, saved }) {
 
 /* ── Secciones ───────────────────────────────────────────── */
 function HeroEditor({ data, onChange, onSave, saving, saved }) {
+  const [uploading, setUploading] = useState(false);
   const f = (key) => (val) => onChange({ ...data, [key]: val });
+
+  const uploadHeroImage = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onChange({ ...data, image: url });
+    } catch (err) {
+      alert('Error al guardar imagen: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const trust = data.trust || [];
+  const updateTrust = (i, field, val) => {
+    const next = trust.map((item, idx) => idx === i ? { ...item, [field]: val } : item);
+    onChange({ ...data, trust: next });
+  };
+
   return (
-    <div className="admin-editor">
-      <p className="admin-editor__title">Sección Hero — parte principal de la página</p>
-      <Field label="Etiqueta pequeña (badge)" value={data.badge} onChange={f("badge")} />
-      <Field label="Título principal" value={data.title} onChange={f("title")} long hint='Usa \n para saltos de línea. Ej: "Distribuidora\nBriancesco\nMenjivar"' />
-      <Field label="Subtítulo / descripción" value={data.subtitle} onChange={f("subtitle")} long />
-      <Field label="Texto botón principal" value={data.cta_primary} onChange={f("cta_primary")} />
-      <Field label="Texto botón secundario" value={data.cta_secondary} onChange={f("cta_secondary")} />
-      <SaveBar onSave={onSave} saving={saving} saved={saved} />
+    <div>
+      <div className="admin-editor">
+        <p className="admin-editor__title">Sección Hero — parte principal de la página</p>
+        <Field label="Etiqueta pequeña (badge)" value={data.badge} onChange={f("badge")} />
+        <Field label="Título principal" value={data.title} onChange={f("title")} long hint='Usa \n para saltos de línea. Ej: "Distribuidora\nBriancesco\nMenjivar"' />
+        <Field label="Subtítulo / descripción" value={data.subtitle} onChange={f("subtitle")} long />
+        <Field label="Texto botón principal" value={data.cta_primary} onChange={f("cta_primary")} />
+        <Field label="Texto botón secundario" value={data.cta_secondary} onChange={f("cta_secondary")} />
+        <Field label="Texto de la nota sobre la imagen" value={data.noteText} onChange={f("noteText")} long hint='Usa \n para saltos de línea' />
+        <ImageField label="Imagen principal del Hero" value={data.image} uploading={uploading} onUpload={uploadHeroImage} />
+      </div>
+
+      <div className="admin-editor">
+        <p className="admin-editor__title">Franja de confianza (4 elementos bajo el Hero)</p>
+        {trust.map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginBottom: 10 }}>
+            <div className="admin-form-group" style={{ flex: 1, marginBottom: 0 }}>
+              <label>Ícono</label>
+              <select value={item.icon} onChange={(e) => updateTrust(i, 'icon', e.target.value)}>
+                {TRUST_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+              </select>
+            </div>
+            <div className="admin-form-group" style={{ flex: 2, marginBottom: 0 }}>
+              <label>Texto {i + 1}</label>
+              <input type="text" value={item.label} onChange={(e) => updateTrust(i, 'label', e.target.value)} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="admin-editor" style={{ background: 'transparent', boxShadow: 'none' }}>
+        <SaveBar onSave={onSave} saving={saving} saved={saved} />
+      </div>
     </div>
   );
 }
@@ -116,21 +184,66 @@ function StatsEditor({ data, onChange, onSave, saving, saved }) {
 }
 
 function AboutEditor({ data, onChange, onSave, saving, saved }) {
+  const [uploading, setUploading] = useState(false);
   const f = (key) => (val) => onChange({ ...data, [key]: val });
   const handleValues = (val) => onChange({ ...data, values: val.split(",").map((s) => s.trim()).filter(Boolean) });
+
+  const uploadAboutImage = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onChange({ ...data, image: url });
+    } catch (err) {
+      alert('Error al guardar imagen: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-editor">
+        <p className="admin-editor__title">Sección Nosotros</p>
+        <Field label="Título de la sección" value={data.title} onChange={f("title")} />
+        <Field label="Subtítulo" value={data.subtitle} onChange={f("subtitle")} long hint='Usa \n para saltos de línea' />
+        <Field label="Texto principal" value={data.text} onChange={f("text")} long hint='Usa \n\n para separar párrafos' />
+        <Field
+          label="Valores de la empresa (separados por coma)"
+          value={Array.isArray(data.values) ? data.values.join(", ") : data.values}
+          onChange={handleValues}
+          hint='Ej: "Confianza, Calidad, Puntualidad, Servicio"'
+        />
+        <Field label="Año de fundación" value={data.foundingYear || "2009"} onChange={f("foundingYear")} />
+        <Field label="Texto debajo del año" value={data.foundingLabel || "Año de fundación"} onChange={f("foundingLabel")} />
+      </div>
+
+      <div className="admin-editor">
+        <p className="admin-editor__title">Vista previa en la página de inicio</p>
+        <Field label="Párrafo 1" value={data.previewText1} onChange={f("previewText1")} long />
+        <Field label="Párrafo 2" value={data.previewText2} onChange={f("previewText2")} long />
+        <Field label="Frase destacada" value={data.highlight} onChange={f("highlight")} />
+        <Field label="Texto de la insignia (ej: +15 AÑOS)" value={data.badgeYears} onChange={f("badgeYears")} />
+        <Field label="Texto debajo de la insignia" value={data.badgeLabel} onChange={f("badgeLabel")} />
+        <ImageField label="Imagen de la sección" value={data.image} uploading={uploading} onUpload={uploadAboutImage} />
+      </div>
+
+      <div className="admin-editor" style={{ background: 'transparent', boxShadow: 'none' }}>
+        <SaveBar onSave={onSave} saving={saving} saved={saved} />
+      </div>
+    </div>
+  );
+}
+
+function CtaEditor({ data, onChange, onSave, saving, saved }) {
+  const f = (key) => (val) => onChange({ ...data, [key]: val });
   return (
     <div className="admin-editor">
-      <p className="admin-editor__title">Sección Nosotros</p>
-      <Field label="Título de la sección" value={data.title} onChange={f("title")} />
-      <Field label="Texto principal" value={data.text} onChange={f("text")} long hint='Usa \n\n para separar párrafos' />
-      <Field
-        label="Valores de la empresa (separados por coma)"
-        value={Array.isArray(data.values) ? data.values.join(", ") : data.values}
-        onChange={handleValues}
-        hint='Ej: "Confianza, Calidad, Puntualidad, Servicio"'
-      />
-      <Field label="Año de fundación" value={data.foundingYear || "2009"} onChange={f("foundingYear")} />
-      <Field label="Texto debajo del año" value={data.foundingLabel || "Año de fundación"} onChange={f("foundingLabel")} />
+      <p className="admin-editor__title">Banner de llamado a la acción (antes del pie de página)</p>
+      <Field label="Título" value={data.title} onChange={f("title")} />
+      <Field label="Texto" value={data.text} onChange={f("text")} long />
+      <Field label="Texto botón principal" value={data.cta_primary} onChange={f("cta_primary")} />
+      <Field label="Texto botón secundario" value={data.cta_secondary} onChange={f("cta_secondary")} />
       <SaveBar onSave={onSave} saving={saving} saved={saved} />
     </div>
   );
@@ -271,10 +384,11 @@ function ContactEditor({ data, onChange, onSave, saving, saved }) {
 export default function AdminContenido() {
   const [activeTab, setActiveTab] = useState("hero");
   const [sections, setSections] = useState({
-    hero:     { ...DEFAULT_CONTENT.hero },
+    hero:     { ...DEFAULT_CONTENT.hero, trust: [...DEFAULT_CONTENT.hero.trust] },
     features: [...DEFAULT_CONTENT.features],
     stats:    [...DEFAULT_CONTENT.stats],
     about:    { ...DEFAULT_CONTENT.about },
+    cta:      { ...DEFAULT_CONTENT.cta },
     contact:  { ...DEFAULT_CONTENT.contact },
     muebles:  { ...DEFAULT_CONTENT.muebles, gallery: [...DEFAULT_CONTENT.muebles.gallery], services: [...DEFAULT_CONTENT.muebles.services] },
   });
@@ -328,6 +442,7 @@ export default function AdminContenido() {
       case "features": return <FeaturesEditor data={sections.features} onChange={handleChange("features")} {...sharedProps} />;
       case "stats":    return <StatsEditor    data={sections.stats}    onChange={handleChange("stats")}    {...sharedProps} />;
       case "about":    return <AboutEditor    data={sections.about}    onChange={handleChange("about")}    {...sharedProps} />;
+      case "cta":      return <CtaEditor      data={sections.cta}      onChange={handleChange("cta")}      {...sharedProps} />;
       case "contact":  return <ContactEditor  data={sections.contact}  onChange={handleChange("contact")}  {...sharedProps} />;
       case "muebles":  return <MueblesEditor   data={sections.muebles}  onChange={handleChange("muebles")}  {...sharedProps} />;
       default: return null;
@@ -338,7 +453,7 @@ export default function AdminContenido() {
     <div className="admin-page">
       <div className="admin-page__header">
         <h1>Contenido del Sitio</h1>
-        <span className="admin-badge admin-badge--count">6 secciones</span>
+        <span className="admin-badge admin-badge--count">7 secciones</span>
       </div>
 
       <div className="admin-tabs">

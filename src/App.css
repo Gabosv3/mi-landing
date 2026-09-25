@@ -2361,6 +2361,11 @@
   height: 28px;
   color: #d2a558;
   flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .home2026__advantage-item strong {
@@ -3726,6 +3731,7 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 .adc-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 
 .adc-card__icon { font-size: 2rem; flex-shrink: 0; }
+.adc-card__thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
 
 .adc-card__info {
   flex: 1;
