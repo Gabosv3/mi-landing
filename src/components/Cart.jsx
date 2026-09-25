@@ -27,13 +27,17 @@ export default function Cart() {
       return;
     }
 
-    let text = "Hola, me interesa solicitar una cotización de los siguientes productos:%0A%0A";
+    const lines = [
+      "👋 Hola, quisiera cotizar los siguientes productos de *Distribuidora Briancesco Menjivar*:",
+      "",
+      ...cart.map((item, i) =>
+        `${i + 1}. *${item.name || "Producto"}*\n   Cantidad: ${item.quantity} · Precio: ${item.price || "Consultar"}`
+      ),
+      "",
+      "¿Podrían ayudarme con la cotización? ¡Gracias! 🙌",
+    ];
 
-    cart.forEach((item, index) => {
-      text += `${index + 1}. ${item.name || "Producto"} (Cantidad: ${item.quantity})%0A`;
-    });
-
-    text += "%0A¡Gracias!";
+    const text = encodeURIComponent(lines.join("\n"));
 
     const url = `https://wa.me/${phoneDigits}?text=${text}`;
     window.open(url, "_blank");
