@@ -44,7 +44,9 @@ async function requireAdmin(req, res, next) {
 const app = express()
 
 app.use('/imagenes/uploads', express.static(UPLOADS_DIR))
-app.use(express.static(DIST_DIR))
+// index: false porque el index.html lo serviremos aparte, sin cachear,
+// para que nunca quede una version vieja apuntando a assets con hash ya borrados.
+app.use(express.static(DIST_DIR, { index: false }))
 
 app.post('/api/upload', requireAdmin, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se envio ningun archivo' })
@@ -54,10 +56,17 @@ app.post('/api/upload', requireAdmin, upload.single('file'), (req, res) => {
   res.json({ url: `/imagenes/uploads/${filename}` })
 })
 
-// SPA fallback: cualquier otra ruta GET devuelve index.html
-app.get(/.*/, (req, res) => {
+// SPA fallback: solo para rutas de navegacion (sin extension), nunca para
+// assets/imagenes que no existen (esas deben dar 404 real, no HTML).
+app.get(/.*/, (req, res, next) => {
+  if (req.path.startsWith('/assets/') || req.path.startsWith('/imagenes/') || path.extname(req.path)) {
+    return next()
+  }
+  res.set('Cache-Control', 'no-cache')
   res.sendFile(path.join(DIST_DIR, 'index.html'))
 })
+
+app.use((req, res) => res.status(404).send('Not found'))
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`Server listening on port ${port}`))
