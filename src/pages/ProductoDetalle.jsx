@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, Link }    from 'react-router-dom';
 import { doc, getDoc }        from 'firebase/firestore';
 import { db }                 from '../firebase/config';
+import { useCart }            from '../context/CartContext';
 
 export default function ProductoDetalle() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     getDoc(doc(db, 'products', id))
@@ -93,14 +97,34 @@ export default function ProductoDetalle() {
             </div>
           </div>
 
+          <div className="pd__qty-row">
+            <span className="pd__meta-label">Cantidad</span>
+            <div className="pd__qty-control">
+              <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Disminuir cantidad">-</button>
+              <span>{qty}</span>
+              <button type="button" onClick={() => setQty((q) => q + 1)} aria-label="Aumentar cantidad">+</button>
+            </div>
+          </div>
+
           <div className="pd__actions">
-            <Link to={`/contacto?producto=${encodeURIComponent(product.name)}`} className="btn btn--solid btn--lg">
+            <button
+              type="button"
+              className="btn btn--solid btn--lg"
+              onClick={() => {
+                addToCart({ id: product.id, name: product.name, price: product.price || 'Contactar', image: product.image_url }, qty);
+                setAdded(true);
+                setTimeout(() => setAdded(false), 2500);
+              }}
+            >
+              {added ? '✓ Agregado' : 'Agregar al carrito'}
+            </button>
+            <Link to={`/contacto?producto=${encodeURIComponent(product.name)}`} className="btn btn--outline">
               Solicitar Cotización
             </Link>
-            <Link to="/productos" className="btn btn--outline">
-              ← Catálogo
-            </Link>
           </div>
+          <Link to="/productos" className="pd__back-link">
+            ← Volver al catálogo
+          </Link>
         </div>
       </div>
     </div>

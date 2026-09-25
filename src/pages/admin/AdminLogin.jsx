@@ -17,6 +17,10 @@ export default function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!form.email.trim() || !form.password) {
+      setError("Completa el correo y la contraseña.");
+      return;
+    }
     setLoading(true);
     try {
       await login(form.email, form.password);

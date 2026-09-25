@@ -63,7 +63,11 @@ export default function AdminCategorias() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) return alert("El nombre de la categoría es obligatorio.");
+    const confirmMsg = editingId
+      ? `¿Guardar los cambios en "${form.name.trim()}"?`
+      : `¿Crear la categoría "${form.name.trim()}"?`;
+    if (!window.confirm(confirmMsg)) return;
     setSaving(true);
     try {
       const data = { name: form.name.trim(), color: form.color, icon: form.icon, image: form.image || "", updatedAt: serverTimestamp() };

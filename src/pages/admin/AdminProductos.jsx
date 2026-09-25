@@ -123,7 +123,13 @@ export default function AdminProductos() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.category) return alert("Faltan campos (Nombre, Precio, Categoria)");
+    if (!form.name.trim()) return alert("El nombre del producto es obligatorio.");
+    if (!form.price.trim()) return alert("El precio es obligatorio.");
+    if (!form.category) return alert("Selecciona una categoría.");
+    if (form.category === "custom" && !form.customCategory.trim()) return alert("Escribe el nombre de la categoría personalizada.");
+    if (!editingId && images.length === 0) return alert("Agrega al menos una imagen del producto.");
+    const confirmMsg = editingId ? `¿Guardar los cambios en "${form.name.trim()}"?` : `¿Crear el producto "${form.name.trim()}"?`;
+    if (!window.confirm(confirmMsg)) return;
     setSaving(true);
     try {
       const finalCategory = form.category === "custom" ? form.customCategory.trim() : form.category;

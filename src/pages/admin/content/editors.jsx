@@ -478,6 +478,7 @@ export function ContentSectionManager({ pageTitle, sectionKeys }) {
     setSections((prev) => ({ ...prev, [key]: val }));
 
   const handleSave = async () => {
+    if (!window.confirm("¿Guardar los cambios? Esto reemplazará el contenido publicado en el sitio.")) return;
     setSaving(true);
     setSaved(false);
     try {

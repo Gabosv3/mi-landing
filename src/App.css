@@ -926,6 +926,14 @@
 .form-group input:focus,
 .form-group textarea:focus { border-bottom-color: var(--text); }
 
+.form-group input.input--error,
+.form-group textarea.input--error { border-bottom-color: #c00; }
+
+.form-error {
+  color: #c00;
+  font-size: 0.75rem;
+}
+
 .form-feedback {
   text-align: center;
   font-size: 0.875rem;
@@ -3649,7 +3657,19 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 .pd__meta-val { font-size: 0.85rem; font-weight: 600; }
 .pd__meta-val--ok { color: #16a34a; }
 
-.pd__actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.pd__qty-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.pd__qty-control { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border-faint); border-radius: 8px; padding: 6px 14px; }
+.pd__qty-control button {
+  width: 26px; height: 26px; border-radius: 6px; border: none; background: #f2f2f2;
+  font-size: 1.1rem; line-height: 1; cursor: pointer; font-weight: 700;
+}
+.pd__qty-control button:hover { background: #e5e5e5; }
+.pd__qty-control span { min-width: 20px; text-align: center; font-weight: 600; }
+
+.pd__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+
+.pd__back-link { display: inline-block; font-size: 0.85rem; color: var(--text-muted); }
+.pd__back-link:hover { color: var(--text); }
 
 /* Loading / Not found states */
 .pd-state {

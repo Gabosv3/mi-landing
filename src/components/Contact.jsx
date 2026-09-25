@@ -4,17 +4,38 @@ import { db } from '../firebase/config';
 import { useContent } from '../hooks/useContent';
 
 const EMPTY = { name: '', email: '', phone: '', message: '' };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[0-9+()\-\s]{7,20}$/;
+
+function validate(form) {
+  const errors = {};
+  if (!form.name.trim()) errors.name = 'El nombre es obligatorio.';
+  if (!form.email.trim()) errors.email = 'El email es obligatorio.';
+  else if (!EMAIL_RE.test(form.email.trim())) errors.email = 'Ingresa un email válido.';
+  if (form.phone.trim() && !PHONE_RE.test(form.phone.trim())) errors.phone = 'Ingresa un teléfono válido.';
+  if (!form.message.trim()) errors.message = 'Escribe tu mensaje.';
+  else if (form.message.trim().length < 10) errors.message = 'El mensaje debe tener al menos 10 caracteres.';
+  return errors;
+}
 
 export default function Contact() {
   const { content } = useContent('contact');
   const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
 
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const fieldErrors = validate(form);
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length > 0) return;
+
     setStatus('sending');
     try {
       await addDoc(collection(db, 'contacts'), {
@@ -76,7 +97,10 @@ export default function Contact() {
                 placeholder={placeholder}
                 required={required}
                 autoComplete="off"
+                aria-invalid={!!errors[name]}
+                className={errors[name] ? 'input--error' : ''}
               />
+              {errors[name] && <small className="form-error">{errors[name]}</small>}
             </div>
           ))}
 
@@ -90,7 +114,10 @@ export default function Contact() {
               placeholder="¿En qué podemos ayudarte?"
               rows={5}
               required
+              aria-invalid={!!errors.message}
+              className={errors.message ? 'input--error' : ''}
             />
+            {errors.message && <small className="form-error">{errors.message}</small>}
           </div>
 
           <button
