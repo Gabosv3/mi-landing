@@ -1022,6 +1022,17 @@
   color: #444;
 }
 
+.footer__credit {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: #666;
+}
+
+.footer__credit span {
+  color: #C08E3D;
+  font-weight: 700;
+}
+
 /* =============================================
    ANIMATIONS
    ============================================= */

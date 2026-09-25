@@ -49,6 +49,7 @@ export default function Footer() {
 
         <div className="footer__bottom">
           <p>© {year} Distribuidora Briancesco Menjivar. Todos los derechos reservados.</p>
+          <p className="footer__credit">Desarrollado por <span>Gabosv</span></p>
         </div>
       </div>
     </footer>
