@@ -19,7 +19,10 @@ import MueblesALaMedida   from './pages/MueblesALaMedida';
 import AdminLogin      from './pages/admin/AdminLogin';
 import AdminLayout     from './pages/admin/AdminLayout';
 import AdminDashboard  from './pages/admin/AdminDashboard';
-import AdminContenido  from './pages/admin/AdminContenido';
+import AdminHome       from './pages/admin/AdminHome';
+import AdminNosotros   from './pages/admin/AdminNosotros';
+import AdminContacto   from './pages/admin/AdminContacto';
+import AdminMuebles    from './pages/admin/AdminMuebles';
 import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminProductos  from './pages/admin/AdminProductos';
 import AdminMensajes   from './pages/admin/AdminMensajes';
@@ -58,7 +61,10 @@ export default function App() {
             >
               <Route index        element={<AdminDashboard />} />
               <Route path="dashboard"  element={<AdminDashboard />} />
-              <Route path="contenido"   element={<AdminContenido />} />
+              <Route path="home"        element={<AdminHome />} />
+              <Route path="nosotros"    element={<AdminNosotros />} />
+              <Route path="contacto"    element={<AdminContacto />} />
+              <Route path="muebles"     element={<AdminMuebles />} />
               <Route path="categorias"  element={<AdminCategorias />} />
               <Route path="productos"   element={<AdminProductos />} />
               <Route path="mensajes"    element={<AdminMensajes />} />

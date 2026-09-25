@@ -47,7 +47,7 @@ export default function AdminDashboard() {
       icon: "❐",
     },
     {
-      to: "/admin/contenido",
+      to: "/admin/home",
       value: 3,
       label: "Secciones",
       desc: "editables del sitio",
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
   ];
 
   const ACTIONS = [
-    { to: "/admin/contenido", label: "Editar contenido del sitio", icon: "✦", color: "#6366f1" },
+    { to: "/admin/home",      label: "Editar el Home",             icon: "⌂", color: "#6366f1" },
     { to: "/admin/productos", label: "Agregar nuevo producto",      icon: "❐", color: "#0ea5e9" },
     { to: "/admin/mensajes",  label: "Revisar mensajes",           icon: "◉", color: "#10b981" },
     { to: "/",                label: "Ver sitio público",          icon: "↗", color: "#f59e0b" },

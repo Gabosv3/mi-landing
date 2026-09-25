@@ -1,38 +1,38 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../../firebase/config";
-import { uploadImage } from "../../utils/uploadImage";
-import { DEFAULT_CONTENT } from "../../hooks/useContent";
-
-const TABS = [
-  { key: "hero",     label: "Hero",           icon: "▣" },
-  { key: "features", label: "Caracteristicas", icon: "✦" },
-  { key: "stats",    label: "Estadisticas",    icon: "◉" },
-  { key: "about",    label: "Nosotros",        icon: "❐" },
-  { key: "cta",      label: "Llamado a accion", icon: "➜" },
-  { key: "contact",  label: "Contacto",        icon: "✉" },
-  { key: "muebles",  label: "Muebles",         icon: "◧" },
-];
+import { db } from "../../../firebase/config";
+import { uploadImage } from "../../../utils/uploadImage";
+import { DEFAULT_CONTENT } from "../../../hooks/useContent";
 
 const TRUST_ICONS = ["quality", "shipping", "support", "price", "home"];
 
 /* ── helpers ──────────────────────────────────────────────── */
-const isArray = (section) => section === "features" || section === "stats";
+const isArraySection = (section) => section === "features" || section === "stats";
+
+export function cloneDefault(section) {
+  const base = DEFAULT_CONTENT[section];
+  if (Array.isArray(base)) return base.map((item) => ({ ...item }));
+  const copy = { ...base };
+  if (Array.isArray(copy.trust)) copy.trust = copy.trust.map((item) => ({ ...item }));
+  if (Array.isArray(copy.gallery)) copy.gallery = copy.gallery.map((item) => ({ ...item }));
+  if (Array.isArray(copy.services)) copy.services = copy.services.map((item) => ({ ...item }));
+  return copy;
+}
 
 async function loadSection(section) {
   const snap = await getDoc(doc(db, "content", section));
   if (!snap.exists()) return null;
   const data = snap.data();
-  return isArray(section) ? (data.items ?? null) : data;
+  return isArraySection(section) ? (data.items ?? null) : data;
 }
 
 async function saveSection(section, data) {
-  const payload = isArray(section) ? { items: data } : data;
+  const payload = isArraySection(section) ? { items: data } : data;
   await setDoc(doc(db, "content", section), payload);
 }
 
-/* ── subcomponents ───────────────────────────────────────── */
-function Field({ label, value, hint, onChange, long = false }) {
+/* ── campos reutilizables ────────────────────────────────── */
+export function Field({ label, value, hint, onChange, long = false }) {
   return (
     <div className="admin-form-group">
       <label>{label}</label>
@@ -46,7 +46,7 @@ function Field({ label, value, hint, onChange, long = false }) {
   );
 }
 
-function ImageField({ label, value, uploading, onUpload }) {
+export function ImageField({ label, value, uploading, onUpload }) {
   const fileRef = useRef(null);
   return (
     <div className="admin-form-group">
@@ -65,7 +65,7 @@ function ImageField({ label, value, uploading, onUpload }) {
   );
 }
 
-function SaveBar({ onSave, saving, saved }) {
+export function SaveBar({ onSave, saving, saved }) {
   return (
     <div className="admin-editor__actions">
       <button className="admin-btn" onClick={onSave} disabled={saving}>
@@ -76,8 +76,8 @@ function SaveBar({ onSave, saving, saved }) {
   );
 }
 
-/* ── Secciones ───────────────────────────────────────────── */
-function HeroEditor({ data, onChange, onSave, saving, saved }) {
+/* ── Editores de sección ─────────────────────────────────── */
+export function HeroEditor({ data, onChange, onSave, saving, saved }) {
   const [uploading, setUploading] = useState(false);
   const f = (key) => (val) => onChange({ ...data, [key]: val });
 
@@ -138,7 +138,7 @@ function HeroEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function FeaturesEditor({ data, onChange, onSave, saving, saved }) {
+export function FeaturesEditor({ data, onChange, onSave, saving, saved }) {
   const update = (i, field, val) => {
     const next = data.map((item, idx) => idx === i ? { ...item, [field]: val } : item);
     onChange(next);
@@ -160,7 +160,7 @@ function FeaturesEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function StatsEditor({ data, onChange, onSave, saving, saved }) {
+export function StatsEditor({ data, onChange, onSave, saving, saved }) {
   const update = (i, field, val) => {
     const next = data.map((item, idx) => idx === i ? { ...item, [field]: val } : item);
     onChange(next);
@@ -183,7 +183,7 @@ function StatsEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function AboutEditor({ data, onChange, onSave, saving, saved }) {
+export function AboutEditor({ data, onChange, onSave, saving, saved }) {
   const [uploading, setUploading] = useState(false);
   const f = (key) => (val) => onChange({ ...data, [key]: val });
   const handleValues = (val) => onChange({ ...data, values: val.split(",").map((s) => s.trim()).filter(Boolean) });
@@ -235,7 +235,7 @@ function AboutEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function CtaEditor({ data, onChange, onSave, saving, saved }) {
+export function CtaEditor({ data, onChange, onSave, saving, saved }) {
   const f = (key) => (val) => onChange({ ...data, [key]: val });
   return (
     <div className="admin-editor">
@@ -249,14 +249,13 @@ function CtaEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function MueblesEditor({ data, onChange, onSave, saving, saved }) {
+export function MueblesEditor({ data, onChange, onSave, saving, saved }) {
   const [uploading, setUploading] = useState({});
   const heroBgRef = useRef(null);
   const fileRefs = useRef([]);
 
   const f = (key) => (val) => onChange({ ...data, [key]: val });
 
-  /* Sube el archivo a nuestro backend */
   const uploadLocal = async (file, key, applyUrl) => {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [key]: true }));
@@ -288,12 +287,8 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
 
   return (
     <div>
-      {/* Imagen de fondo del Hero */}
       <div className="admin-editor">
         <p className="admin-editor__title">Imagen de fondo del Hero</p>
-        <p style={{ fontSize: '0.82rem', color: '#666', marginBottom: 12 }}>
-          La imagen se guarda localmente en <code>public/imagenes/uploads/</code>.
-        </p>
         {data.heroBg && (
           <img src={data.heroBg} alt="Hero fondo" style={{ width: '100%', height: 180, objectFit: 'cover', marginBottom: 12, borderRadius: 6 }} />
         )}
@@ -306,7 +301,6 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
         </button>
       </div>
 
-      {/* Textos principales */}
       <div className="admin-editor">
         <p className="admin-editor__title">Textos de la página</p>
         <Field label="Título" value={data.title} onChange={f('title')} />
@@ -315,7 +309,6 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
         <Field label="Texto del botón CTA" value={data.cta_text} onChange={f('cta_text')} />
       </div>
 
-      {/* Servicios */}
       {data.services.map((s, i) => (
         <div className="admin-editor" key={i}>
           <p className="admin-editor__title">Servicio {i + 1}</p>
@@ -325,7 +318,6 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
         </div>
       ))}
 
-      {/* Galería */}
       <div className="admin-editor">
         <p className="admin-editor__title">Galería de imágenes</p>
         {data.gallery.map((item, i) => (
@@ -366,7 +358,7 @@ function MueblesEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-function ContactEditor({ data, onChange, onSave, saving, saved }) {
+export function ContactEditor({ data, onChange, onSave, saving, saved }) {
   const f = (key) => (val) => onChange({ ...data, [key]: val });
   return (
     <div className="admin-editor">
@@ -380,24 +372,34 @@ function ContactEditor({ data, onChange, onSave, saving, saved }) {
   );
 }
 
-/* ── Main ────────────────────────────────────────────────── */
-export default function AdminContenido() {
-  const [activeTab, setActiveTab] = useState("hero");
-  const [sections, setSections] = useState({
-    hero:     { ...DEFAULT_CONTENT.hero, trust: [...DEFAULT_CONTENT.hero.trust] },
-    features: [...DEFAULT_CONTENT.features],
-    stats:    [...DEFAULT_CONTENT.stats],
-    about:    { ...DEFAULT_CONTENT.about },
-    cta:      { ...DEFAULT_CONTENT.cta },
-    contact:  { ...DEFAULT_CONTENT.contact },
-    muebles:  { ...DEFAULT_CONTENT.muebles, gallery: [...DEFAULT_CONTENT.muebles.gallery], services: [...DEFAULT_CONTENT.muebles.services] },
+/* ── Registro de secciones disponibles ──────────────────────
+   Cada página admin (Home, Nosotros, Contacto, Muebles) pasa el
+   subconjunto de claves que le corresponde. */
+export const SECTION_REGISTRY = {
+  hero:     { label: "Hero",            icon: "▣", Editor: HeroEditor },
+  features: { label: "Características", icon: "✦", Editor: FeaturesEditor },
+  stats:    { label: "Estadísticas",    icon: "◉", Editor: StatsEditor },
+  cta:      { label: "Llamado a acción",icon: "➜", Editor: CtaEditor },
+  about:    { label: "Nosotros",        icon: "❐", Editor: AboutEditor },
+  contact:  { label: "Contacto",        icon: "✉", Editor: ContactEditor },
+  muebles:  { label: "Muebles",         icon: "◧", Editor: MueblesEditor },
+};
+
+/* ── Gestor genérico de secciones de contenido ─────────────
+   Recibe las claves de sección (del SECTION_REGISTRY) que le
+   corresponden a esta página y maneja carga/guardado en Firestore. */
+export function ContentSectionManager({ pageTitle, sectionKeys }) {
+  const [activeTab, setActiveTab] = useState(sectionKeys[0]);
+  const [sections, setSections] = useState(() => {
+    const initial = {};
+    sectionKeys.forEach((key) => { initial[key] = cloneDefault(key); });
+    return initial;
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loadingTab, setLoadingTab] = useState(false);
   const [loaded, setLoaded] = useState({});
 
-  /* load section from Firestore the first time a tab is opened */
   useEffect(() => {
     if (loaded[activeTab]) return;
     setLoadingTab(true);
@@ -410,7 +412,7 @@ export default function AdminContenido() {
       })
       .catch(() => setLoaded((prev) => ({ ...prev, [activeTab]: true })))
       .finally(() => setLoadingTab(false));
-  }, [activeTab]);
+  }, [activeTab, loaded]);
 
   const handleChange = (key) => (val) =>
     setSections((prev) => ({ ...prev, [key]: val }));
@@ -429,47 +431,39 @@ export default function AdminContenido() {
     }
   };
 
-  const sharedProps = {
-    onSave: handleSave,
-    saving,
-    saved,
-  };
-
-  const renderEditor = () => {
-    if (loadingTab) return <p className="admin-loading-text">Cargando sección…</p>;
-    switch (activeTab) {
-      case "hero":     return <HeroEditor     data={sections.hero}     onChange={handleChange("hero")}     {...sharedProps} />;
-      case "features": return <FeaturesEditor data={sections.features} onChange={handleChange("features")} {...sharedProps} />;
-      case "stats":    return <StatsEditor    data={sections.stats}    onChange={handleChange("stats")}    {...sharedProps} />;
-      case "about":    return <AboutEditor    data={sections.about}    onChange={handleChange("about")}    {...sharedProps} />;
-      case "cta":      return <CtaEditor      data={sections.cta}      onChange={handleChange("cta")}      {...sharedProps} />;
-      case "contact":  return <ContactEditor  data={sections.contact}  onChange={handleChange("contact")}  {...sharedProps} />;
-      case "muebles":  return <MueblesEditor   data={sections.muebles}  onChange={handleChange("muebles")}  {...sharedProps} />;
-      default: return null;
-    }
-  };
+  const sharedProps = { onSave: handleSave, saving, saved };
+  const { Editor } = SECTION_REGISTRY[activeTab];
 
   return (
     <div className="admin-page">
       <div className="admin-page__header">
-        <h1>Contenido del Sitio</h1>
-        <span className="admin-badge admin-badge--count">7 secciones</span>
+        <h1>{pageTitle}</h1>
+        {sectionKeys.length > 1 && (
+          <span className="admin-badge admin-badge--count">{sectionKeys.length} secciones</span>
+        )}
       </div>
 
-      <div className="admin-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            className={`admin-tab${activeTab === t.key ? " admin-tab--active" : ""}`}
-            onClick={() => { setActiveTab(t.key); setSaved(false); }}
-          >
-            <span style={{ marginRight: 6 }}>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {sectionKeys.length > 1 && (
+        <div className="admin-tabs">
+          {sectionKeys.map((key) => {
+            const { label, icon } = SECTION_REGISTRY[key];
+            return (
+              <button
+                key={key}
+                className={`admin-tab${activeTab === key ? " admin-tab--active" : ""}`}
+                onClick={() => { setActiveTab(key); setSaved(false); }}
+              >
+                <span style={{ marginRight: 6 }}>{icon}</span>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {renderEditor()}
+      {loadingTab
+        ? <p className="admin-loading-text">Cargando sección…</p>
+        : <Editor data={sections[activeTab]} onChange={handleChange(activeTab)} {...sharedProps} />}
     </div>
   );
 }

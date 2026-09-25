@@ -2,11 +2,14 @@
 import { useAuth } from "../../context/AuthContext";
 
 const LINKS = [
-  { to: "/admin/dashboard",   label: "Dashboard",    icon: "▣" },
-  { to: "/admin/contenido",   label: "Contenido",    icon: "✦" },
-  { to: "/admin/categorias",  label: "Categorías",   icon: "◈" },
-  { to: "/admin/productos",   label: "Productos",    icon: "❐" },
-  { to: "/admin/mensajes",    label: "Mensajes",     icon: "◉" },
+  { to: "/admin/dashboard",   label: "Dashboard",              icon: "▣" },
+  { to: "/admin/home",        label: "Home",                   icon: "⌂" },
+  { to: "/admin/nosotros",    label: "Nosotros",                icon: "❐" },
+  { to: "/admin/contacto",    label: "Contacto",                icon: "✉" },
+  { to: "/admin/muebles",     label: "Muebles a la Medida",     icon: "◧" },
+  { to: "/admin/categorias",  label: "Categorías",              icon: "◈" },
+  { to: "/admin/productos",   label: "Productos",               icon: "❐" },
+  { to: "/admin/mensajes",    label: "Mensajes",                icon: "◉" },
 ];
 
 export default function AdminSidebar() {
