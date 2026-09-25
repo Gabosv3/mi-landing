@@ -250,7 +250,7 @@ function CategoriesRail({ categories }) {
                 : <span className="home2026__category-thumb-icon">{category.icon}</span>}
             </div>
             <div className="home2026__category-meta">
-              <span className="home2026__category-icon">{category.icon}</span>
+              {!category.image && <span className="home2026__category-icon">{category.icon}</span>}
               <strong>{category.label}</strong>
             </div>
           </Link>
