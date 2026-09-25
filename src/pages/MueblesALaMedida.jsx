@@ -449,7 +449,7 @@ export default function MueblesALaMedida() {
             {WOODS.map((w, i) => (
               <div className="ml__wcard" key={i}>
                 <div className="ml__wcard-imgwrap">
-                  <img src={w.img} alt={w.name} className="ml__wcard-img" loading="lazy" />
+                  <img src={content.woods?.[i]?.img || w.img} alt={w.name} className="ml__wcard-img" loading="lazy" />
                   <span className={`ml__wcard-badge ml__wcard-badge--${w.badgeType}`}>{w.badge}</span>
                 </div>
                 <div className="ml__wcard-body">
@@ -617,7 +617,7 @@ export default function MueblesALaMedida() {
             hechos para durar generaciones.
           </p>
           <div className="ml__process-steps">
-            {PROCESS.map((step) => (
+            {PROCESS.map((step, i) => (
               <article className="ml__step-card" key={step.num}>
                 <div className="ml__step-top">
                   <div className="ml__step-chip">{step.num}</div>
@@ -629,7 +629,7 @@ export default function MueblesALaMedida() {
                   <p>{step.desc}</p>
                 </div>
                 <div className="ml__step-image-wrap">
-                  <img src={step.image} alt={step.title} className="ml__step-image" loading="lazy" />
+                  <img src={content.process?.[i]?.img || step.image} alt={step.title} className="ml__step-image" loading="lazy" />
                 </div>
                 <div className="ml__step-note">
                   <span className="ml__step-note-icon">{PROCESS_ICONS[step.noteIcon]}</span>

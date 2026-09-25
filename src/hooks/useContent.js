@@ -81,6 +81,21 @@ export const DEFAULT_CONTENT = {
       { icon: '◇', title: 'Materiales Premium', desc: 'Solo utilizamos maderas y materiales de alta calidad.' },
       { icon: '◈', title: 'Entrega e Instalación', desc: 'Nos encargamos del traslado y montaje en tu hogar.' },
     ],
+    /* Imagen de cada tipo de madera (seccion "Trabajamos con las mejores maderas").
+       Vacio = usa la foto de stock por defecto. */
+    woods: [
+      { name: 'Cedro', img: '' },
+      { name: 'Caoba', img: '' },
+      { name: 'Roble', img: '' },
+      { name: 'Pino', img: '' },
+    ],
+    /* Imagen de cada paso de la seccion "Del boceto a tu hogar". */
+    process: [
+      { name: 'Consulta Inicial', img: '' },
+      { name: 'Diseño Personalizado', img: '' },
+      { name: 'Fabricación Artesanal', img: '' },
+      { name: 'Entrega e Instalación', img: '' },
+    ],
   },
 };
 

@@ -16,6 +16,8 @@ export function cloneDefault(section) {
   if (Array.isArray(copy.trust)) copy.trust = copy.trust.map((item) => ({ ...item }));
   if (Array.isArray(copy.gallery)) copy.gallery = copy.gallery.map((item) => ({ ...item }));
   if (Array.isArray(copy.services)) copy.services = copy.services.map((item) => ({ ...item }));
+  if (Array.isArray(copy.woods)) copy.woods = copy.woods.map((item) => ({ ...item }));
+  if (Array.isArray(copy.process)) copy.process = copy.process.map((item) => ({ ...item }));
   return copy;
 }
 
@@ -279,6 +281,11 @@ export function MueblesEditor({ data, onChange, onSave, saving, saved }) {
     onChange({ ...data, gallery: next });
   };
 
+  const updateImageAt = (arrayKey, i, url) => {
+    const next = data[arrayKey].map((item, idx) => idx === i ? { ...item, img: url } : item);
+    onChange({ ...data, [arrayKey]: next });
+  };
+
   const addGalleryItem = () =>
     onChange({ ...data, gallery: [...data.gallery, { url: '', caption: '' }] });
 
@@ -317,6 +324,32 @@ export function MueblesEditor({ data, onChange, onSave, saving, saved }) {
           <Field label="Descripción" value={s.desc} onChange={(v) => updateService(i, 'desc', v)} long />
         </div>
       ))}
+
+      <div className="admin-editor">
+        <p className="admin-editor__title">Imágenes de "Trabajamos con las mejores maderas"</p>
+        {(data.woods || []).map((w, i) => (
+          <ImageField
+            key={i}
+            label={w.name}
+            value={w.img}
+            uploading={uploading[`wood_${i}`]}
+            onUpload={(file) => uploadLocal(file, `wood_${i}`, (url) => updateImageAt('woods', i, url))}
+          />
+        ))}
+      </div>
+
+      <div className="admin-editor">
+        <p className="admin-editor__title">Imágenes de "Del boceto a tu hogar"</p>
+        {(data.process || []).map((p, i) => (
+          <ImageField
+            key={i}
+            label={p.name}
+            value={p.img}
+            uploading={uploading[`process_${i}`]}
+            onUpload={(file) => uploadLocal(file, `process_${i}`, (url) => updateImageAt('process', i, url))}
+          />
+        ))}
+      </div>
 
       <div className="admin-editor">
         <p className="admin-editor__title">Galería de imágenes</p>
