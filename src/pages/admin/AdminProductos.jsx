@@ -119,12 +119,14 @@ export default function AdminProductos() {
   const setPrimary = (id) =>
     setImages((prev) => prev.map((img) => ({ ...img, isPrimary: img.id === id })));
 
-  const removeImage = (id) =>
+  const removeImage = async (id) => {
+    if (!(await confirm("Se quitará esta imagen del producto.", { title: "¿Eliminar imagen?", danger: true, confirmText: "Eliminar" }))) return;
     setImages((prev) => {
       const next = prev.filter((img) => img.id !== id);
       if (next.length > 0 && !next.some((img) => img.isPrimary)) next[0].isPrimary = true;
       return next;
     });
+  };
 
   /* -- Colores disponibles -- */
   const addColor = () =>
@@ -133,8 +135,10 @@ export default function AdminProductos() {
   const updateColor = (id, field, val) =>
     setColors((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: val } : c)));
 
-  const removeColor = (id) =>
+  const removeColor = async (id) => {
+    if (!(await confirm("Se quitará este color de la lista.", { title: "¿Eliminar color?", danger: true, confirmText: "Eliminar" }))) return;
     setColors((prev) => prev.filter((c) => c.id !== id));
+  };
 
   /* -- Subir imagen a nuestro backend -- */
   const uploadImage = async (item) => {

@@ -305,6 +305,7 @@ export function MueblesEditor({ data, onChange, onSave, saving, saved }) {
   const [uploading, setUploading] = useState({});
   const heroBgRef = useRef(null);
   const fileRefs = useRef([]);
+  const confirm = useConfirm();
 
   const f = (key) => (val) => onChange({ ...data, [key]: val });
 
@@ -339,8 +340,10 @@ export function MueblesEditor({ data, onChange, onSave, saving, saved }) {
   const addGalleryItem = () =>
     onChange({ ...data, gallery: [...data.gallery, { url: '', caption: '' }] });
 
-  const removeGalleryItem = (i) =>
+  const removeGalleryItem = async (i) => {
+    if (!(await confirm("Se quitará esta imagen de la galería.", { title: "¿Eliminar imagen?", danger: true, confirmText: "Eliminar" }))) return;
     onChange({ ...data, gallery: data.gallery.filter((_, idx) => idx !== i) });
+  };
 
   return (
     <div>
