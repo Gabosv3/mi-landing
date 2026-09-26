@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useContent } from '../hooks/useContent';
+import { useConfirm } from '../context/ConfirmContext';
 
 const EMPTY = { name: '', email: '', phone: '', message: '' };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,6 +24,7 @@ export default function Contact() {
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const confirm = useConfirm();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,7 +37,7 @@ export default function Contact() {
     const fieldErrors = validate(form);
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) return;
-    if (!window.confirm('¿Enviar este mensaje?')) return;
+    if (!(await confirm('Verifica que tus datos sean correctos antes de continuar.', { title: '¿Enviar este mensaje?', confirmText: 'Enviar' }))) return;
 
     setStatus('sending');
     try {

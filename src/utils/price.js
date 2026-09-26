@@ -9,6 +9,15 @@ export function formatPrice(num) {
   return `$${num.toFixed(2)}`;
 }
 
+/* Muestra el precio tal cual si ya trae simbolo o texto (ej: "Consultar"),
+   o le antepone "$" si es un numero puro (ej: "100" -> "$100"). */
+export function displayPrice(value) {
+  if (value == null || value === "") return value;
+  const str = String(value).trim();
+  if (/^[\d.,]+$/.test(str)) return `$${str}`;
+  return str;
+}
+
 /* Si el producto tiene un precio original valido mayor al precio actual,
    devuelve el % de descuento y ambos valores. Si no aplica, null. */
 export function getDiscountInfo(price, compareAtPrice) {

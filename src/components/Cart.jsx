@@ -3,11 +3,13 @@ import { collection, query as fsQuery, where, getDocs } from "firebase/firestore
 import { db } from "../firebase/config";
 import { useCart } from "../context/CartContext";
 import { useContent } from "../hooks/useContent";
-import { parsePrice, formatPrice } from "../utils/price";
+import { parsePrice, formatPrice, displayPrice } from "../utils/price";
+import { useConfirm } from "../context/ConfirmContext";
 
 export default function Cart() {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart } = useCart();
   const { content } = useContent("contact");
+  const confirm = useConfirm();
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState(null); // { code, type, value }
   const [couponError, setCouponError] = useState("");
@@ -26,13 +28,15 @@ export default function Cart() {
     : 0;
   const total = Math.max(0, subtotal - discountAmount);
 
-  const handleRemove = (id, name) => {
-    if (!window.confirm(`¿Quitar "${name || "este producto"}" del carrito?`)) return;
+  const handleRemove = async (id, name) => {
+    const ok = await confirm(`Se quitará "${name || "este producto"}" del carrito.`, { title: "¿Quitar producto?" });
+    if (!ok) return;
     removeFromCart(id);
   };
 
-  const handleClear = () => {
-    if (!window.confirm("¿Vaciar todo el carrito? Esta acción no se puede deshacer.")) return;
+  const handleClear = async () => {
+    const ok = await confirm("Esta acción no se puede deshacer.", { title: "¿Vaciar todo el carrito?", danger: true, confirmText: "Vaciar" });
+    if (!ok) return;
     clearCart();
     setCoupon(null);
     setCouponInput("");
@@ -80,7 +84,7 @@ export default function Cart() {
       "👋 Hola, quisiera cotizar los siguientes productos de *Distribuidora Briancesco Menjivar*:",
       "",
       ...cart.map((item, i) =>
-        `${i + 1}. *${item.name || "Producto"}*\n   Cantidad: ${item.quantity} · Precio: ${item.price || "Consultar"}`
+        `${i + 1}. *${item.name || "Producto"}*\n   Cantidad: ${item.quantity} · Precio: ${item.price ? displayPrice(item.price) : "Consultar"}`
       ),
       "",
     ];
@@ -139,7 +143,7 @@ export default function Cart() {
                   </div>
                   <div className="cart-item-details">
                     <h4>{item.name}</h4>
-                    <p>{item.price}</p>
+                    <p>{displayPrice(item.price)}</p>
                     <div className="cart-item-qty">
                       <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
                       <span>{item.quantity}</span>

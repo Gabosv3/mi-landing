@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../../firebase/config";
 import { uploadImage } from "../../../utils/uploadImage";
+import { useConfirm } from "../../../context/ConfirmContext";
 import { DEFAULT_CONTENT } from "../../../hooks/useContent";
 
 const TRUST_ICONS = ["quality", "shipping", "support", "price", "home"];
@@ -481,6 +482,7 @@ export function ContentSectionManager({ pageTitle, sectionKeys }) {
   const [saved, setSaved] = useState(false);
   const [loadingTab, setLoadingTab] = useState(false);
   const [loaded, setLoaded] = useState({});
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (loaded[activeTab]) return;
@@ -506,7 +508,7 @@ export function ContentSectionManager({ pageTitle, sectionKeys }) {
   const handleSave = async () => {
     const validationError = validateSection(activeTab, sections[activeTab]);
     if (validationError) return alert(validationError);
-    if (!window.confirm("¿Guardar los cambios? Esto reemplazará el contenido publicado en el sitio.")) return;
+    if (!(await confirm("Esto reemplazará el contenido publicado en el sitio.", { title: "¿Guardar los cambios?" }))) return;
     setSaving(true);
     setSaved(false);
     try {

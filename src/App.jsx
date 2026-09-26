@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Cart from './components/Cart';
@@ -52,6 +53,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+        <ConfirmProvider>
           <ScrollToTop />
           <Routes>
             {/* Rutas admin */}
@@ -82,6 +84,7 @@ export default function App() {
               <Route path="/contacto"  element={<Contacto />} />
             </Route>
           </Routes>
+        </ConfirmProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

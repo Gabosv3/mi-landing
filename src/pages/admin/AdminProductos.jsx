@@ -5,8 +5,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { uploadImage as uploadFile } from "../../utils/uploadImage";
-import { parsePrice, getDiscountInfo } from "../../utils/price";
+import { parsePrice, getDiscountInfo, displayPrice } from "../../utils/price";
 import RichTextEditor from "../../components/admin/RichTextEditor";
+import { useConfirm } from "../../context/ConfirmContext";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
@@ -33,6 +34,7 @@ export default function AdminProductos() {
   const [saving,      setSaving]      = useState(false);
   const [search,      setSearch]      = useState("");
   const fileInputRef = useRef(null);
+  const confirm = useConfirm();
 
   /* -- Cargar datos -- */
   const loadProducts = async () => {
@@ -158,7 +160,7 @@ export default function AdminProductos() {
     if (form.category === "custom" && !form.customCategory.trim()) return alert("Escribe el nombre de la categoría personalizada.");
     if (!editingId && images.length === 0) return alert("Agrega al menos una imagen del producto.");
     const confirmMsg = editingId ? `¿Guardar los cambios en "${form.name.trim()}"?` : `¿Crear el producto "${form.name.trim()}"?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm(confirmMsg))) return;
     setSaving(true);
     try {
       const finalCategory = form.category === "custom" ? form.customCategory.trim() : form.category;
@@ -215,7 +217,8 @@ export default function AdminProductos() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Eliminar este producto?")) return;
+    const ok = await confirm("Esta acción no se puede deshacer.", { title: "¿Eliminar este producto?", danger: true, confirmText: "Eliminar" });
+    if (!ok) return;
     await deleteDoc(doc(db, "products", id));
     await loadProducts();
   };
@@ -544,7 +547,7 @@ export default function AdminProductos() {
                       </span>
                     </td>
                     <td>
-                      <strong>{p.price}</strong>
+                      <strong>{displayPrice(p.price)}</strong>
                       {getDiscountInfo(p.price, p.compareAtPrice) && (
                         <span className="adp-discount-badge">-{getDiscountInfo(p.price, p.compareAtPrice).percent}%</span>
                       )}

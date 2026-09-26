@@ -4,6 +4,7 @@ import {
   deleteDoc, doc, serverTimestamp, orderBy, query,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { useConfirm } from "../../context/ConfirmContext";
 
 const EMPTY_FORM = { code: "", type: "percent", value: "", active: true };
 
@@ -13,6 +14,7 @@ export default function AdminCupones() {
   const [editingId, setEditingId] = useState(null);
   const [showForm,  setShowForm]  = useState(false);
   const [saving,    setSaving]    = useState(false);
+  const confirm = useConfirm();
 
   const load = async () => {
     try {
@@ -46,7 +48,7 @@ export default function AdminCupones() {
     if (form.type === "percent" && value > 100) return alert("Un descuento por porcentaje no puede ser mayor a 100.");
 
     const confirmMsg = editingId ? `¿Guardar los cambios en el cupón "${code}"?` : `¿Crear el cupón "${code}"?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm(confirmMsg))) return;
 
     setSaving(true);
     try {
@@ -68,7 +70,8 @@ export default function AdminCupones() {
   };
 
   const handleDelete = async (id, code) => {
-    if (!window.confirm(`¿Eliminar el cupón "${code}"? Ya no se podrá usar.`)) return;
+    const ok = await confirm(`El cupón "${code}" ya no se podrá usar.`, { title: "¿Eliminar cupón?", danger: true, confirmText: "Eliminar" });
+    if (!ok) return;
     try {
       await deleteDoc(doc(db, "coupons", id));
       await load();

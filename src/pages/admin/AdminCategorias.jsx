@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { uploadImage } from "../../utils/uploadImage";
+import { useConfirm } from "../../context/ConfirmContext";
 
 const PALETTE = [
   "#3b82f6", "#f59e0b", "#8b5cf6", "#06b6d4",
@@ -24,6 +25,7 @@ export default function AdminCategorias() {
   const [saving,     setSaving]     = useState(false);
   const [uploading,  setUploading]  = useState(false);
   const fileRef = useRef(null);
+  const confirm = useConfirm();
 
   const load = async () => {
     try {
@@ -67,7 +69,7 @@ export default function AdminCategorias() {
     const confirmMsg = editingId
       ? `¿Guardar los cambios en "${form.name.trim()}"?`
       : `¿Crear la categoría "${form.name.trim()}"?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm(confirmMsg))) return;
     setSaving(true);
     try {
       const data = { name: form.name.trim(), color: form.color, icon: form.icon, image: form.image || "", updatedAt: serverTimestamp() };
@@ -86,7 +88,8 @@ export default function AdminCategorias() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Eliminar la categoría "${name}"?\nLos productos con esta categoría no se eliminarán.`)) return;
+    const ok = await confirm(`Se eliminará la categoría "${name}".\nLos productos con esta categoría no se eliminarán.`, { title: "¿Eliminar categoría?", danger: true, confirmText: "Eliminar" });
+    if (!ok) return;
     try {
       await deleteDoc(doc(db, "categories", id));
       await load();
