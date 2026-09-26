@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { uploadImage as uploadFile } from "../../utils/uploadImage";
+import { parsePrice, getDiscountInfo } from "../../utils/price";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
@@ -14,7 +15,7 @@ function buildImageItem(url, path, isPrimary, file) {
   return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0 };
 }
 
-const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", brand: "", availability: "Disponible" };
+const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", compareAtPrice: "", brand: "", availability: "Disponible" };
 
 export default function AdminProductos() {
   const [products,    setProducts]    = useState([]);
@@ -68,6 +69,7 @@ export default function AdminProductos() {
       customCategory: "",
       description:    p.description || p.desc || "",
       price:          p.price || "",
+      compareAtPrice: p.compareAtPrice || "",
       brand:          p.brand || "",
       availability:   p.availability || "Disponible",
     });
@@ -125,6 +127,12 @@ export default function AdminProductos() {
     e.preventDefault();
     if (!form.name.trim()) return alert("El nombre del producto es obligatorio.");
     if (!form.price.trim()) return alert("El precio es obligatorio.");
+    if (form.compareAtPrice.trim()) {
+      const sale = parsePrice(form.price);
+      const original = parsePrice(form.compareAtPrice);
+      if (!Number.isFinite(original)) return alert("El precio original debe ser un número (ej: 25.00).");
+      if (Number.isFinite(sale) && original <= sale) return alert("El precio original debe ser mayor que el precio con descuento.");
+    }
     if (!form.category) return alert("Selecciona una categoría.");
     if (form.category === "custom" && !form.customCategory.trim()) return alert("Escribe el nombre de la categoría personalizada.");
     if (!editingId && images.length === 0) return alert("Agrega al menos una imagen del producto.");
@@ -153,6 +161,7 @@ export default function AdminProductos() {
         subcategory: form.subcategory.trim(),
         description: form.description.trim(),
         price:       form.price.trim(),
+        compareAtPrice: form.compareAtPrice.trim(),
         brand:       form.brand.trim(),
         availability:form.availability,
         images:      finalImages,
@@ -276,6 +285,19 @@ export default function AdminProductos() {
                 required
                 placeholder="Ej: $12.50 o Consultar"
               />
+            </div>
+
+            {/* Precio original (descuento) */}
+            <div className="admin-form-group">
+              <label>Precio original (opcional)</label>
+              <input
+                type="text"
+                name="compareAtPrice"
+                value={form.compareAtPrice}
+                onChange={(e) => setForm((p) => ({ ...p, compareAtPrice: e.target.value }))}
+                placeholder="Ej: 25.00 — déjalo vacío si no hay descuento"
+              />
+              <small>Si lo llenas, se mostrará tachado junto al precio con descuento.</small>
             </div>
 
             {/* Marca */}
@@ -445,7 +467,12 @@ export default function AdminProductos() {
                         {p.category}
                       </span>
                     </td>
-                    <td><strong>{p.price}</strong></td>
+                    <td>
+                      <strong>{p.price}</strong>
+                      {getDiscountInfo(p.price, p.compareAtPrice) && (
+                        <span className="adp-discount-badge">-{getDiscountInfo(p.price, p.compareAtPrice).percent}%</span>
+                      )}
+                    </td>
                     <td className="admin-table__actions">
                       <button className="admin-btn admin-btn--sm" onClick={() => openEdit(p)}>Editar</button>
                       <button className="admin-btn admin-btn--sm admin-btn--danger" onClick={() => handleDelete(p.id)}>Eliminar</button>

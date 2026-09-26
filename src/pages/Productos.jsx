@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useCart } from "../context/CartContext";
+import PriceTag from "../components/PriceTag";
 
 const PLACEHOLDER = [
   { id: "p1", name: "Set de Limpieza Premium", category: "LIMPIEZA DEL HOGAR", description: "Set completo de productos para mantener tu hogar impecable.", image_url: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80" },
@@ -262,6 +263,7 @@ export default function Productos() {
                 <div className="home2026__pcard-body">
                   <h3 style={{fontSize: '1.05rem'}}>{p.name}</h3>
                   <p>{p.description || p.desc}</p>
+                  <PriceTag price={p.price} compareAtPrice={p.compareAtPrice} className="prod2026__card-price" />
                   <div className="prod2026__card-actions" style={{marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px'}}>
                     <Link to={`/productos/${p.id}`} className="prod2026__link-detail">Ver detalle &rarr;</Link>
                     <button onClick={() => addToCart({ id: p.id, name: p.name, price: p.price || "Contactar", image: p.image_url || p.image_url })} className="home2026__pbtn home2026__pbtn--gold" style={{padding: "8px 16px", borderRadius: "4px", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", fontWeight: 600}}>

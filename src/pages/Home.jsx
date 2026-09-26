@@ -5,6 +5,7 @@ import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useContent } from "../hooks/useContent";
 import { useCart } from "../context/CartContext";
+import PriceTag from "../components/PriceTag";
 
 const HOME_ICONS = {
   quality: (
@@ -313,7 +314,7 @@ function ProductsPreview({ products }) {
                 <p>{product.desc || product.description}</p>
                 <div className="home2026__pcard-divider" />
                 <span className="home2026__pcard-price">
-                  Desde <strong>{product.price === "Consultar" ? "$39.99" : product.price}</strong>
+                  Desde <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} className="home2026__pcard-price-tag" />
                 </span>
                 <div className="home2026__pcard-actions">
                   <Link to={`/productos/${product.id}`} className="home2026__pbtn home2026__pbtn--outline">Ver detalle</Link>

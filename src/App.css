@@ -1858,6 +1858,18 @@
   color: var(--adm-muted);
 }
 .admin-badge--count { background: var(--adm-sidebar-bg); color: #fff; }
+.admin-badge--ok { background: #dcfce7; color: #15803d; }
+.admin-badge--muted { background: #f1f5f9; color: #94a3b8; }
+
+.admin-form-group--inline label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
 
 /* ====================================================
    MESSAGES
@@ -3755,6 +3767,47 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   overflow-wrap: break-word;
 }
 
+.adp-discount-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Precio con descuento (catalogo, home, detalle) */
+.price-compare {
+  text-decoration: line-through;
+  color: var(--text-muted, #888);
+  font-size: 0.85em;
+  margin-right: 6px;
+}
+
+.home2026__pcard-price-tag { font-weight: 700; }
+
+.prod2026__card-price {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111;
+  margin-top: 6px;
+}
+
+.price-discount-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fee2e2;
+  color: #b91c1c;
+  vertical-align: middle;
+}
+
 /* Product thumbnail in table */
 .adp-product-cell {
   display: flex;
@@ -5636,6 +5689,93 @@ A d d i n g   C a r t   s t y l e s 
 .cart-footer {
   padding: 1.5rem;
   border-top: 1px solid #eaeaea;
+}
+
+.cart-coupon { margin-bottom: 1rem; }
+
+.cart-coupon__form {
+  display: flex;
+  gap: 8px;
+}
+
+.cart-coupon__form input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.cart-coupon__form button {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.cart-coupon__form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cart-coupon__applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.cart-coupon__applied button {
+  background: none;
+  border: none;
+  color: #c00;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cart-coupon__error {
+  display: block;
+  color: #c00;
+  margin-top: 6px;
+  font-size: 0.78rem;
+}
+
+.cart-summary {
+  border-top: 1px dashed #eaeaea;
+  padding-top: 12px;
+  margin-bottom: 1rem;
+}
+
+.cart-summary__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  padding: 3px 0;
+  color: #444;
+}
+
+.cart-summary__row--discount { color: #15803d; }
+
+.cart-summary__row--total {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #111;
+  border-top: 1px solid #eaeaea;
+  margin-top: 6px;
+  padding-top: 8px;
+}
+
+.cart-summary__note {
+  display: block;
+  color: #888;
+  font-size: 0.72rem;
+  margin-top: 6px;
 }
 
 .cart-btn {

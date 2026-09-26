@@ -20,6 +20,7 @@ const NAV = [
     children: [
       { to: "/admin/categorias", label: "Categorías", icon: "◈" },
       { to: "/admin/productos",  label: "Productos",  icon: "❐" },
+      { to: "/admin/cupones",    label: "Cupones",    icon: "🏷" },
     ],
   },
   { to: "/admin/mensajes", label: "Mensajes", icon: "◉" },

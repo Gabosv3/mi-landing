@@ -25,6 +25,7 @@ import AdminContacto   from './pages/admin/AdminContacto';
 import AdminMuebles    from './pages/admin/AdminMuebles';
 import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminProductos  from './pages/admin/AdminProductos';
+import AdminCupones    from './pages/admin/AdminCupones';
 import AdminMensajes   from './pages/admin/AdminMensajes';
 
 import './App.css';
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="muebles"     element={<AdminMuebles />} />
               <Route path="categorias"  element={<AdminCategorias />} />
               <Route path="productos"   element={<AdminProductos />} />
+              <Route path="cupones"     element={<AdminCupones />} />
               <Route path="mensajes"    element={<AdminMensajes />} />
             </Route>
 

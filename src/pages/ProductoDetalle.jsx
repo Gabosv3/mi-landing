@@ -3,6 +3,7 @@ import { useParams, Link }    from 'react-router-dom';
 import { doc, getDoc }        from 'firebase/firestore';
 import { db }                 from '../firebase/config';
 import { useCart }            from '../context/CartContext';
+import PriceTag                from '../components/PriceTag';
 
 export default function ProductoDetalle() {
   const { id } = useParams();
@@ -74,7 +75,7 @@ export default function ProductoDetalle() {
 
           <div className="pd__price-row">
             <span className="pd__price-label">Precio</span>
-            <span className="pd__price">{product.price}</span>
+            <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} className="pd__price" />
           </div>
 
           {(product.description || product.desc) && (
