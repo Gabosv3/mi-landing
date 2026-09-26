@@ -6,14 +6,18 @@ import {
 import { db } from "../../firebase/config";
 import { uploadImage as uploadFile } from "../../utils/uploadImage";
 import { parsePrice, getDiscountInfo } from "../../utils/price";
+import RichTextEditor from "../../components/admin/RichTextEditor";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
 const uid = () => `img_${Date.now()}_${_uid++}`;
 
-function buildImageItem(url, path, isPrimary, file, color) {
-  return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0, color: color || "" };
+function buildImageItem(url, path, isPrimary, file) {
+  return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0 };
 }
+
+let _colorUid = 0;
+const colorUid = () => `color_${Date.now()}_${_colorUid++}`;
 
 const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", compareAtPrice: "", brand: "", availability: "Disponible" };
 
@@ -23,6 +27,7 @@ export default function AdminProductos() {
   const [catColors,   setCatColors]   = useState({});
   const [form,        setForm]        = useState(EMPTY_FORM);
   const [images,      setImages]      = useState([]);         // array de image items
+  const [colors,      setColors]      = useState([]);         // array de {id, name, hex, imageUrl}
   const [editingId,   setEditingId]   = useState(null);
   const [showForm,    setShowForm]    = useState(false);
   const [saving,      setSaving]      = useState(false);
@@ -56,6 +61,7 @@ export default function AdminProductos() {
   const openNew = () => {
     setForm(EMPTY_FORM);
     setImages([]);
+    setColors([]);
     setEditingId(null);
     setShowForm(true);
     setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
@@ -75,13 +81,18 @@ export default function AdminProductos() {
     });
     /* Cargar imagenes existentes */
     const imgs = Array.isArray(p.images) && p.images.length > 0
-      ? p.images.map((img) => buildImageItem(img.url, img.path || "", img.isPrimary, null, img.color))
+      ? p.images.map((img) => buildImageItem(img.url, img.path || "", img.isPrimary, null))
       : p.image_url
         ? [buildImageItem(p.image_url, "", true, null)]
         : [];
     /* Garantizar que al menos una sea principal */
     if (imgs.length > 0 && !imgs.some((i) => i.isPrimary)) imgs[0].isPrimary = true;
     setImages(imgs);
+    setColors(
+      Array.isArray(p.colors)
+        ? p.colors.map((c) => ({ id: colorUid(), name: c.name || "", hex: c.hex || "#000000", imageUrl: c.imageUrl || "" }))
+        : []
+    );
     setEditingId(p.id);
     setShowForm(true);
     setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
@@ -106,15 +117,22 @@ export default function AdminProductos() {
   const setPrimary = (id) =>
     setImages((prev) => prev.map((img) => ({ ...img, isPrimary: img.id === id })));
 
-  const setImageColor = (id, color) =>
-    setImages((prev) => prev.map((img) => (img.id === id ? { ...img, color } : img)));
-
   const removeImage = (id) =>
     setImages((prev) => {
       const next = prev.filter((img) => img.id !== id);
       if (next.length > 0 && !next.some((img) => img.isPrimary)) next[0].isPrimary = true;
       return next;
     });
+
+  /* -- Colores disponibles -- */
+  const addColor = () =>
+    setColors((prev) => [...prev, { id: colorUid(), name: "", hex: "#000000", imageUrl: images[0]?.url || "" }]);
+
+  const updateColor = (id, field, val) =>
+    setColors((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: val } : c)));
+
+  const removeColor = (id) =>
+    setColors((prev) => prev.filter((c) => c.id !== id));
 
   /* -- Subir imagen a nuestro backend -- */
   const uploadImage = async (item) => {
@@ -145,18 +163,25 @@ export default function AdminProductos() {
     try {
       const finalCategory = form.category === "custom" ? form.customCategory.trim() : form.category;
 
-      /* Subir solo las imagenes nuevas (que tienen file) */
+      /* Subir solo las imagenes nuevas (que tienen file); recordar la URL vieja
+         (blob local) -> nueva, para poder actualizar los colores que la usaban */
+      const urlRemap = {};
       const finalImages = await Promise.all(
         images.map(async (img) => {
           if (img.file) {
             const { url, path } = await uploadImage(img);
-            return { url, path, isPrimary: img.isPrimary, color: img.color || "" };
+            urlRemap[img.url] = url;
+            return { url, path, isPrimary: img.isPrimary };
           }
-          return { url: img.url, path: img.storagePath || "", isPrimary: img.isPrimary, color: img.color || "" };
+          return { url: img.url, path: img.storagePath || "", isPrimary: img.isPrimary };
         })
       );
 
       const primaryImg = finalImages.find((i) => i.isPrimary) || finalImages[0];
+
+      const finalColors = colors
+        .filter((c) => c.name.trim())
+        .map((c) => ({ name: c.name.trim(), hex: c.hex, imageUrl: urlRemap[c.imageUrl] || c.imageUrl }));
 
       const data = {
         name:        form.name.trim(),
@@ -168,6 +193,7 @@ export default function AdminProductos() {
         brand:       form.brand.trim(),
         availability:form.availability,
         images:      finalImages,
+        colors:      finalColors,
         image_url:   primaryImg?.url || "",   /* compatibilidad con vista publica */
         updatedAt:   serverTimestamp(),
       };
@@ -333,11 +359,10 @@ export default function AdminProductos() {
             {/* Descripcion */}
             <div className="admin-form-group adp-form__full">
               <label>Descripcion</label>
-              <textarea
-                name="description"
-                rows={4}
+              <RichTextEditor
+                key={editingId || "new"}
                 value={form.description}
-                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                onChange={(html) => setForm((p) => ({ ...p, description: html }))}
                 placeholder="Describe el producto, usos, presentaciones disponibles."
               />
             </div>
@@ -368,13 +393,6 @@ export default function AdminProductos() {
                       )}
                     </div>
                     {img.isPrimary && <span className="adp-img-item__badge">⭐ Principal</span>}
-                    <input
-                      type="text"
-                      className="adp-img-item__color"
-                      value={img.color}
-                      onChange={(e) => setImageColor(img.id, e.target.value)}
-                      placeholder="Color (ej: Rosa)"
-                    />
                     <div className="adp-img-item__actions">
                       {!img.isPrimary && (
                         <button type="button" className="adp-img-btn adp-img-btn--star" onClick={() => setPrimary(img.id)} title="Hacer principal">
@@ -407,6 +425,54 @@ export default function AdminProductos() {
             </button>
             {images.length === 0 && (
               <p className="adp-images-empty">Sin imágenes. La primera que agregues sera la principal.</p>
+            )}
+          </div>
+
+          {/* ---- COLORES DISPONIBLES ---- */}
+          <div className="adp-images-section">
+            <div className="adp-images-header">
+              <span className="adp-images-title">Colores disponibles</span>
+              <span className="adp-images-hint">Cada color puede mostrar una imagen distinta</span>
+            </div>
+
+            {colors.length > 0 && (
+              <div className="adp-colors-list">
+                {colors.map((c) => (
+                  <div className="adp-color-row" key={c.id}>
+                    <input
+                      type="color"
+                      value={c.hex}
+                      onChange={(e) => updateColor(c.id, "hex", e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      value={c.name}
+                      onChange={(e) => updateColor(c.id, "name", e.target.value)}
+                      placeholder="Nombre del color (ej: Rosado)"
+                    />
+                    <select
+                      value={c.imageUrl}
+                      onChange={(e) => updateColor(c.id, "imageUrl", e.target.value)}
+                    >
+                      <option value="">-- Imagen para este color --</option>
+                      {images.map((img, i) => (
+                        <option key={img.id} value={img.url}>Imagen {i + 1}</option>
+                      ))}
+                    </select>
+                    {c.imageUrl && <img src={c.imageUrl} alt="" className="adp-color-row__preview" />}
+                    <button type="button" className="adp-img-btn adp-img-btn--del" onClick={() => removeColor(c.id)} title="Eliminar color">
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button type="button" className="adp-add-images-btn" onClick={addColor} disabled={images.length === 0}>
+              <span>+</span> Agregar color
+            </button>
+            {images.length === 0 && (
+              <p className="adp-images-empty">Agrega primero las imágenes del producto.</p>
             )}
           </div>
 

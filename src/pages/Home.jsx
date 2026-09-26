@@ -311,7 +311,6 @@ function ProductsPreview({ products }) {
               </div>
               <div className="home2026__pcard-body">
                 <h3>{product.name}</h3>
-                <p>{product.desc || product.description}</p>
                 <div className="home2026__pcard-divider" />
                 <span className="home2026__pcard-price">
                   Desde <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} className="home2026__pcard-price-tag" />

@@ -1720,6 +1720,49 @@
 .admin-form-group textarea { min-height: 100px; resize: vertical; }
 .admin-form-group small { font-size: .72rem; color: var(--adm-muted); margin-top: 4px; display: block; }
 
+/* Editor WYSIWYG */
+.rte {
+  border: 1.5px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm);
+  background: #fafbfc;
+  overflow: hidden;
+}
+
+.rte__toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-bottom: 1px solid var(--adm-border);
+  background: #f1f5f9;
+}
+
+.rte__btn {
+  min-width: 30px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.rte__btn:hover { border-color: var(--adm-border); }
+
+.rte__content {
+  min-height: 140px;
+  padding: 12px 14px;
+  font-size: .9rem;
+  font-family: var(--font-sans, sans-serif);
+  color: var(--adm-text);
+  outline: none;
+}
+
+.rte__content:empty:before {
+  content: attr(data-placeholder);
+  color: #aaa;
+}
+
+.rte__content ul, .rte__content ol { padding-left: 1.4em; }
+
 /* ====================================================
    SHARED BUTTONS  (.admin-btn)
    ==================================================== */
@@ -3638,29 +3681,35 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 
 .pd__color-row { margin-bottom: 20px; }
 
-.pd__color-options {
+.pd__color-swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.pd__color-chip {
-  padding: 6px 14px;
-  border: 1px solid var(--border-faint);
-  border-radius: 20px;
-  background: #fff;
-  font-size: 0.8rem;
+.pd__swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border-faint);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 
-.pd__color-chip:hover { border-color: #999; }
+.pd__swatch:hover { transform: scale(1.08); }
 
-.pd__color-chip--active {
-  border-color: var(--text, #111);
-  background: var(--text, #111);
+.pd__swatch--active { box-shadow: 0 0 0 2px var(--text, #111); }
+
+.pd__swatch-check {
   color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-shadow: 0 0 2px rgba(0,0,0,0.6);
 }
 
 /* Info panel */
@@ -5490,14 +5539,53 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   text-align: center;
 }
 
-.adp-img-item__color {
-  width: 100%;
+.adp-colors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.adp-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--adm-border);
+  border-radius: 8px;
+}
+
+.adp-color-row input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: none;
-  border-top: 1px solid var(--adm-border);
-  padding: 6px 8px;
-  font-size: 0.75rem;
-  text-align: center;
-  outline: none;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.adp-color-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--adm-border);
+  border-radius: 6px;
+}
+
+.adp-color-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--adm-border);
+  border-radius: 6px;
+  max-width: 160px;
+}
+
+.adp-color-row__preview {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .adp-img-item__actions {

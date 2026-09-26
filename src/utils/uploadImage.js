@@ -5,7 +5,9 @@ const JPEG_QUALITY = 0.78;
 
 /* Redimensiona/comprime en el navegador antes de subir, para que la imagen
    quepa bajo el límite de tamaño del backend (las fotos de cámara/celular
-   suelen pesar varios MB). SVG y GIF se dejan tal cual. */
+   suelen pesar varios MB). SVG y GIF se dejan tal cual. Los PNG se mantienen
+   como PNG (conservan transparencia real); solo el JPEG se re-comprime,
+   ya que ese formato no tiene canal alfa que se pueda perder. */
 async function compressImage(file) {
   if (file.type === "image/svg+xml" || file.type === "image/gif") return file;
 
@@ -20,16 +22,14 @@ async function compressImage(file) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  // JPEG no soporta transparencia: sin esto, las zonas transparentes de PNGs
-  // (fondos, logos) salen negras en vez de blancas al convertir.
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
 
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+  const isPng = file.type === "image/png";
+  const mime = isPng ? "image/png" : "image/jpeg";
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, isPng ? undefined : JPEG_QUALITY));
   if (!blob) return file;
-  return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+  const ext = isPng ? ".png" : ".jpg";
+  return new File([blob], file.name.replace(/\.\w+$/, ext), { type: mime });
 }
 
 /* Sube un archivo a nuestro backend (server.js), autenticado con el token de Firebase Auth */

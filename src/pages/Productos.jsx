@@ -262,7 +262,6 @@ export default function Productos() {
                 </div>
                 <div className="home2026__pcard-body">
                   <h3 style={{fontSize: '1.05rem'}}>{p.name}</h3>
-                  <p>{p.description || p.desc}</p>
                   <PriceTag price={p.price} compareAtPrice={p.compareAtPrice} className="prod2026__card-price" />
                   <div className="prod2026__card-actions" style={{marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px'}}>
                     <Link to={`/productos/${p.id}`} className="prod2026__link-detail">Ver detalle &rarr;</Link>

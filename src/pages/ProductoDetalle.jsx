@@ -12,6 +12,7 @@ export default function ProductoDetalle() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedColor, setSelectedColor] = useState(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ProductoDetalle() {
       .then((snap) => {
         if (snap.exists()) setProduct({ id: snap.id, ...snap.data() });
         setActiveIndex(0);
+        setSelectedColor(null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -31,8 +33,8 @@ export default function ProductoDetalle() {
   }, [product]);
 
   const colors = useMemo(
-    () => [...new Set(images.map((img) => img.color).filter(Boolean))],
-    [images]
+    () => (Array.isArray(product?.colors) ? product.colors.filter((c) => c.name) : []),
+    [product]
   );
 
   if (loading) {
@@ -58,9 +60,12 @@ export default function ProductoDetalle() {
   const activeImage = images[activeIndex] || images[0];
 
   const selectColor = (color) => {
-    const idx = images.findIndex((img) => img.color === color);
+    setSelectedColor(color.name);
+    const idx = images.findIndex((img) => img.url === color.imageUrl);
     if (idx >= 0) setActiveIndex(idx);
   };
+
+  const description = product.description || product.desc;
 
   return (
     <div className="pd">
@@ -97,7 +102,7 @@ export default function ProductoDetalle() {
                   type="button"
                   className={`pd__thumb${i === activeIndex ? ' pd__thumb--active' : ''}`}
                   onClick={() => setActiveIndex(i)}
-                  aria-label={img.color ? `Ver color ${img.color}` : `Ver imagen ${i + 1}`}
+                  aria-label={`Ver imagen ${i + 1}`}
                 >
                   <img src={img.url} alt="" />
                 </button>
@@ -116,10 +121,10 @@ export default function ProductoDetalle() {
             <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} className="pd__price" />
           </div>
 
-          {(product.description || product.desc) && (
+          {description && (
             <div className="pd__desc-block">
               <h3 className="pd__desc-title">Descripción</h3>
-              <p className="pd__desc">{product.description || product.desc}</p>
+              <div className="pd__desc" dangerouslySetInnerHTML={{ __html: description }} />
             </div>
           )}
 
@@ -138,16 +143,19 @@ export default function ProductoDetalle() {
 
           {colors.length > 0 && (
             <div className="pd__color-row">
-              <span className="pd__meta-label">Color{activeImage?.color ? `: ${activeImage.color}` : ''}</span>
-              <div className="pd__color-options">
+              <span className="pd__meta-label">Color{selectedColor ? `: ${selectedColor}` : ''}</span>
+              <div className="pd__color-swatches">
                 {colors.map((color) => (
                   <button
-                    key={color}
+                    key={color.name}
                     type="button"
-                    className={`pd__color-chip${activeImage?.color === color ? ' pd__color-chip--active' : ''}`}
+                    className={`pd__swatch${selectedColor === color.name ? ' pd__swatch--active' : ''}`}
+                    style={{ backgroundColor: color.hex }}
                     onClick={() => selectColor(color)}
+                    title={color.name}
+                    aria-label={color.name}
                   >
-                    {color}
+                    {selectedColor === color.name && <span className="pd__swatch-check">✓</span>}
                   </button>
                 ))}
               </div>
@@ -169,8 +177,8 @@ export default function ProductoDetalle() {
               className="btn btn--solid btn--lg"
               onClick={() => {
                 addToCart({
-                  id: product.id + (activeImage?.color ? `-${activeImage.color}` : ''),
-                  name: product.name + (activeImage?.color ? ` (${activeImage.color})` : ''),
+                  id: product.id + (selectedColor ? `-${selectedColor}` : ''),
+                  name: product.name + (selectedColor ? ` (${selectedColor})` : ''),
                   price: product.price || 'Contactar',
                   image: activeImage?.url || product.image_url,
                 }, qty);
