@@ -11,8 +11,8 @@ import { parsePrice, getDiscountInfo } from "../../utils/price";
 let _uid = 0;
 const uid = () => `img_${Date.now()}_${_uid++}`;
 
-function buildImageItem(url, path, isPrimary, file) {
-  return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0 };
+function buildImageItem(url, path, isPrimary, file, color) {
+  return { id: uid(), url, storagePath: path, isPrimary: !!isPrimary, file: file || null, uploading: false, progress: 0, color: color || "" };
 }
 
 const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", compareAtPrice: "", brand: "", availability: "Disponible" };
@@ -75,7 +75,7 @@ export default function AdminProductos() {
     });
     /* Cargar imagenes existentes */
     const imgs = Array.isArray(p.images) && p.images.length > 0
-      ? p.images.map((img) => buildImageItem(img.url, img.path || "", img.isPrimary, null))
+      ? p.images.map((img) => buildImageItem(img.url, img.path || "", img.isPrimary, null, img.color))
       : p.image_url
         ? [buildImageItem(p.image_url, "", true, null)]
         : [];
@@ -105,6 +105,9 @@ export default function AdminProductos() {
 
   const setPrimary = (id) =>
     setImages((prev) => prev.map((img) => ({ ...img, isPrimary: img.id === id })));
+
+  const setImageColor = (id, color) =>
+    setImages((prev) => prev.map((img) => (img.id === id ? { ...img, color } : img)));
 
   const removeImage = (id) =>
     setImages((prev) => {
@@ -147,9 +150,9 @@ export default function AdminProductos() {
         images.map(async (img) => {
           if (img.file) {
             const { url, path } = await uploadImage(img);
-            return { url, path, isPrimary: img.isPrimary };
+            return { url, path, isPrimary: img.isPrimary, color: img.color || "" };
           }
-          return { url: img.url, path: img.storagePath || "", isPrimary: img.isPrimary };
+          return { url: img.url, path: img.storagePath || "", isPrimary: img.isPrimary, color: img.color || "" };
         })
       );
 
@@ -364,15 +367,22 @@ export default function AdminProductos() {
                         </div>
                       )}
                     </div>
-                    {img.isPrimary && <span className="adp-img-item__badge">? Principal</span>}
+                    {img.isPrimary && <span className="adp-img-item__badge">⭐ Principal</span>}
+                    <input
+                      type="text"
+                      className="adp-img-item__color"
+                      value={img.color}
+                      onChange={(e) => setImageColor(img.id, e.target.value)}
+                      placeholder="Color (ej: Rosa)"
+                    />
                     <div className="adp-img-item__actions">
                       {!img.isPrimary && (
                         <button type="button" className="adp-img-btn adp-img-btn--star" onClick={() => setPrimary(img.id)} title="Hacer principal">
-                          ?
+                          ⭐
                         </button>
                       )}
                       <button type="button" className="adp-img-btn adp-img-btn--del" onClick={() => removeImage(img.id)} title="Eliminar">
-                        ?
+                        🗑️
                       </button>
                     </div>
                   </div>

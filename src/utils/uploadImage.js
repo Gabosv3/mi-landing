@@ -20,7 +20,12 @@ async function compressImage(file) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+  const ctx = canvas.getContext("2d");
+  // JPEG no soporta transparencia: sin esto, las zonas transparentes de PNGs
+  // (fondos, logos) salen negras en vez de blancas al convertir.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(bitmap, 0, 0, width, height);
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
   if (!blob) return file;

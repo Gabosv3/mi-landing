@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link }    from 'react-router-dom';
 import { doc, getDoc }        from 'firebase/firestore';
 import { db }                 from '../firebase/config';
@@ -11,14 +11,29 @@ export default function ProductoDetalle() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const { addToCart } = useCart();
 
   useEffect(() => {
     getDoc(doc(db, 'products', id))
-      .then((snap) => { if (snap.exists()) setProduct({ id: snap.id, ...snap.data() }); })
+      .then((snap) => {
+        if (snap.exists()) setProduct({ id: snap.id, ...snap.data() });
+        setActiveIndex(0);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
+
+  const images = useMemo(() => {
+    if (!product) return [];
+    if (Array.isArray(product.images) && product.images.length > 0) return product.images;
+    return product.image_url ? [{ url: product.image_url }] : [];
+  }, [product]);
+
+  const colors = useMemo(
+    () => [...new Set(images.map((img) => img.color).filter(Boolean))],
+    [images]
+  );
 
   if (loading) {
     return (
@@ -40,6 +55,13 @@ export default function ProductoDetalle() {
     );
   }
 
+  const activeImage = images[activeIndex] || images[0];
+
+  const selectColor = (color) => {
+    const idx = images.findIndex((img) => img.color === color);
+    if (idx >= 0) setActiveIndex(idx);
+  };
+
   return (
     <div className="pd">
       {/* Breadcrumb */}
@@ -58,12 +80,28 @@ export default function ProductoDetalle() {
 
         {/* Imagen */}
         <div className="pd__media">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="pd__img" />
+          {activeImage ? (
+            <img src={activeImage.url} alt={product.name} className="pd__img" />
           ) : (
             <div className="pd__img-placeholder">
               <span>◈</span>
               <small>Sin imagen</small>
+            </div>
+          )}
+
+          {images.length > 1 && (
+            <div className="pd__thumbs">
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`pd__thumb${i === activeIndex ? ' pd__thumb--active' : ''}`}
+                  onClick={() => setActiveIndex(i)}
+                  aria-label={img.color ? `Ver color ${img.color}` : `Ver imagen ${i + 1}`}
+                >
+                  <img src={img.url} alt="" />
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -98,6 +136,24 @@ export default function ProductoDetalle() {
             </div>
           </div>
 
+          {colors.length > 0 && (
+            <div className="pd__color-row">
+              <span className="pd__meta-label">Color{activeImage?.color ? `: ${activeImage.color}` : ''}</span>
+              <div className="pd__color-options">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`pd__color-chip${activeImage?.color === color ? ' pd__color-chip--active' : ''}`}
+                    onClick={() => selectColor(color)}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="pd__qty-row">
             <span className="pd__meta-label">Cantidad</span>
             <div className="pd__qty-control">
@@ -112,7 +168,12 @@ export default function ProductoDetalle() {
               type="button"
               className="btn btn--solid btn--lg"
               onClick={() => {
-                addToCart({ id: product.id, name: product.name, price: product.price || 'Contactar', image: product.image_url }, qty);
+                addToCart({
+                  id: product.id + (activeImage?.color ? `-${activeImage.color}` : ''),
+                  name: product.name + (activeImage?.color ? ` (${activeImage.color})` : ''),
+                  price: product.price || 'Contactar',
+                  image: activeImage?.url || product.image_url,
+                }, qty);
                 setAdded(true);
                 setTimeout(() => setAdded(false), 2500);
               }}

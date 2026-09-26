@@ -3614,6 +3614,55 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
 .pd__img-placeholder span { font-size: 5rem; color: #ddd; }
 .pd__img-placeholder small { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; }
 
+.pd__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pd__thumb {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid var(--border-faint);
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.pd__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pd__thumb--active { border-color: var(--text, #111); }
+
+.pd__color-row { margin-bottom: 20px; }
+
+.pd__color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pd__color-chip {
+  padding: 6px 14px;
+  border: 1px solid var(--border-faint);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pd__color-chip:hover { border-color: #999; }
+
+.pd__color-chip--active {
+  border-color: var(--text, #111);
+  background: var(--text, #111);
+  color: #fff;
+}
+
 /* Info panel */
 .pd__category-badge {
   display: inline-block;
@@ -5439,6 +5488,16 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   text-transform: uppercase;
   padding: 3px 8px;
   text-align: center;
+}
+
+.adp-img-item__color {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--adm-border);
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  text-align: center;
+  outline: none;
 }
 
 .adp-img-item__actions {
