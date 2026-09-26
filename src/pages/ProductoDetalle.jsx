@@ -13,7 +13,15 @@ export default function ProductoDetalle() {
   const [added, setAdded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [zoomPos, setZoomPos] = useState(null);
   const { addToCart } = useCart();
+
+  const handleZoomMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
 
   useEffect(() => {
     getDoc(doc(db, 'products', id))
@@ -86,7 +94,22 @@ export default function ProductoDetalle() {
         {/* Imagen */}
         <div className="pd__media">
           {activeImage ? (
-            <img src={activeImage.url} alt={product.name} className="pd__img" />
+            <div
+              className="pd__img-zoom-wrap"
+              onMouseMove={handleZoomMove}
+              onMouseLeave={() => setZoomPos(null)}
+            >
+              <img src={activeImage.url} alt={product.name} className="pd__img" />
+              {zoomPos && (
+                <div
+                  className="pd__img-zoom-lens"
+                  style={{
+                    backgroundImage: `url(${activeImage.url})`,
+                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                  }}
+                />
+              )}
+            </div>
           ) : (
             <div className="pd__img-placeholder">
               <span>◈</span>

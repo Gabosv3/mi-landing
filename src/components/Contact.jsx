@@ -35,6 +35,7 @@ export default function Contact() {
     const fieldErrors = validate(form);
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) return;
+    if (!window.confirm('¿Enviar este mensaje?')) return;
 
     setStatus('sending');
     try {

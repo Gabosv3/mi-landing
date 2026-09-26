@@ -21,6 +21,32 @@ export function cloneDefault(section) {
   return copy;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/* Validacion minima por seccion antes de guardar. Devuelve un mensaje de
+   error, o null si esta todo bien. */
+function validateSection(key, data) {
+  if (key === "hero") {
+    if (!data.badge?.trim() || !data.title?.trim() || !data.subtitle?.trim()) {
+      return "Completa el badge, título y subtítulo del Hero.";
+    }
+  }
+  if (key === "about") {
+    if (!data.title?.trim()) return "El título de la sección Nosotros es obligatorio.";
+  }
+  if (key === "cta") {
+    if (!data.title?.trim() || !data.text?.trim()) return "Completa el título y el texto del banner.";
+  }
+  if (key === "contact") {
+    if (!data.phone?.trim()) return "El teléfono es obligatorio.";
+    if (!data.email?.trim() || !EMAIL_RE.test(data.email.trim())) return "Ingresa un email válido.";
+  }
+  if (key === "muebles") {
+    if (!data.title?.trim()) return "El título de Muebles a la Medida es obligatorio.";
+  }
+  return null;
+}
+
 async function loadSection(section) {
   const snap = await getDoc(doc(db, "content", section));
   if (!snap.exists()) return null;
@@ -478,6 +504,8 @@ export function ContentSectionManager({ pageTitle, sectionKeys }) {
     setSections((prev) => ({ ...prev, [key]: val }));
 
   const handleSave = async () => {
+    const validationError = validateSection(activeTab, sections[activeTab]);
+    if (validationError) return alert(validationError);
     if (!window.confirm("¿Guardar los cambios? Esto reemplazará el contenido publicado en el sitio.")) return;
     setSaving(true);
     setSaved(false);

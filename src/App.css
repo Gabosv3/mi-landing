@@ -3654,6 +3654,20 @@ a.product-card { display: block; text-decoration: none; color: inherit; }
   justify-content: center;
   gap: 12px;
 }
+.pd__img-zoom-wrap {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.pd__img-zoom-lens {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: 220%;
+  pointer-events: none;
+}
+
 .pd__img-placeholder span { font-size: 5rem; color: #ddd; }
 .pd__img-placeholder small { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; }
 
