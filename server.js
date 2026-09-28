@@ -75,14 +75,35 @@ app.post('/api/upload', requireAdmin, handleUpload, async (req, res) => {
   }
 })
 
+// Cache en memoria del proceso: evita releer Firestore en cada request de una
+// imagen ya servida (las imagenes son inmutables una vez subidas). Tamano
+// acotado con expulsion FIFO simple para no crecer sin limite.
+const IMAGE_CACHE_MAX = 300
+const imageCache = new Map()
+
+function cacheImage(id, buffer, contentType) {
+  if (imageCache.size >= IMAGE_CACHE_MAX) {
+    imageCache.delete(imageCache.keys().next().value)
+  }
+  imageCache.set(id, { buffer, contentType })
+}
+
 app.get('/api/image/:id', async (req, res) => {
   try {
+    const cached = imageCache.get(req.params.id)
+    if (cached) {
+      res.set('Content-Type', cached.contentType)
+      res.set('Cache-Control', 'public, max-age=31536000, immutable')
+      return res.send(cached.buffer)
+    }
     const snap = await db().collection('uploads').doc(req.params.id).get()
     if (!snap.exists) return res.status(404).send('Not found')
     const { data, contentType } = snap.data()
+    const buffer = Buffer.from(data, 'base64')
+    cacheImage(req.params.id, buffer, contentType)
     res.set('Content-Type', contentType)
     res.set('Cache-Control', 'public, max-age=31536000, immutable')
-    res.send(Buffer.from(data, 'base64'))
+    res.send(buffer)
   } catch {
     res.status(500).send('Error loading image')
   }

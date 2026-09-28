@@ -209,6 +209,7 @@ function HomeHero({ content }) {
             src={content.image || "/imagenes/Home/Home1.png"}
             alt="Espacio de cocina"
             className="home2026__hero-bg"
+            fetchPriority="high"
           />
           <div className="home2026__hero-fade" />
           <div className="home2026__hero-note">
@@ -404,7 +405,7 @@ function AboutPreview({ content, stats }) {
           </div>
 
           <div className="home2026__about-visual">
-            <img src={content.image} alt="Equipo BM" className="home2026__about-img" />
+            <img src={content.image} alt="Equipo BM" className="home2026__about-img" loading="lazy" />
             <div className="home2026__about-badge">
               <div className="home2026__about-badge-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#C08E3D" strokeWidth="1.5">

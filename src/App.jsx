@@ -1,5 +1,5 @@
 ﻿import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ConfirmProvider } from './context/ConfirmContext';
@@ -8,28 +8,32 @@ import Footer from './components/Footer';
 import Cart from './components/Cart';
 import PrivateRoute from './components/admin/PrivateRoute';
 
-// Páginas públicas
-import Home             from './pages/Home';
-import Productos        from './pages/Productos';
-import ProductoDetalle  from './pages/ProductoDetalle';
-import Nosotros           from './pages/Nosotros';
-import Contacto           from './pages/Contacto';
-import MueblesALaMedida   from './pages/MueblesALaMedida';
+// Páginas públicas — cada una en su propio chunk, cargado solo cuando se visita
+const Home             = lazy(() => import('./pages/Home'));
+const Productos        = lazy(() => import('./pages/Productos'));
+const ProductoDetalle  = lazy(() => import('./pages/ProductoDetalle'));
+const Nosotros          = lazy(() => import('./pages/Nosotros'));
+const Contacto          = lazy(() => import('./pages/Contacto'));
+const MueblesALaMedida  = lazy(() => import('./pages/MueblesALaMedida'));
 
-// Páginas admin
-import AdminLogin      from './pages/admin/AdminLogin';
-import AdminLayout     from './pages/admin/AdminLayout';
-import AdminDashboard  from './pages/admin/AdminDashboard';
-import AdminHome       from './pages/admin/AdminHome';
-import AdminNosotros   from './pages/admin/AdminNosotros';
-import AdminContacto   from './pages/admin/AdminContacto';
-import AdminMuebles    from './pages/admin/AdminMuebles';
-import AdminCategorias from './pages/admin/AdminCategorias';
-import AdminProductos  from './pages/admin/AdminProductos';
-import AdminCupones    from './pages/admin/AdminCupones';
-import AdminMensajes   from './pages/admin/AdminMensajes';
+// Páginas admin — nunca se descargan para un visitante normal del sitio
+const AdminLogin      = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminLayout     = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboard  = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminHome       = lazy(() => import('./pages/admin/AdminHome'));
+const AdminNosotros   = lazy(() => import('./pages/admin/AdminNosotros'));
+const AdminContacto   = lazy(() => import('./pages/admin/AdminContacto'));
+const AdminMuebles    = lazy(() => import('./pages/admin/AdminMuebles'));
+const AdminCategorias = lazy(() => import('./pages/admin/AdminCategorias'));
+const AdminProductos  = lazy(() => import('./pages/admin/AdminProductos'));
+const AdminCupones    = lazy(() => import('./pages/admin/AdminCupones'));
+const AdminMensajes   = lazy(() => import('./pages/admin/AdminMensajes'));
 
 import './App.css';
+
+function RouteFallback() {
+  return <div style={{ minHeight: '60vh' }} />;
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -55,6 +59,7 @@ export default function App() {
         <CartProvider>
         <ConfirmProvider>
           <ScrollToTop />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* Rutas admin */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -84,6 +89,7 @@ export default function App() {
               <Route path="/contacto"  element={<Contacto />} />
             </Route>
           </Routes>
+          </Suspense>
         </ConfirmProvider>
         </CartProvider>
       </AuthProvider>
