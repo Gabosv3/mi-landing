@@ -1068,7 +1068,9 @@
     justify-content: space-between;
     align-items: center;
   }
-  .navbar__right { display: none; }
+  .navbar__right { display: flex; }
+  .navbar__cta { display: none; }
+  .navbar__cart-btn { margin-left: 0; }
   .navbar__links {
     display: none;
     position: fixed;
@@ -3339,10 +3341,6 @@
 }
 
 @media (max-width: 680px) {
-  .navbar__right {
-    display: none;
-  }
-
   .prod2026__filter-item {
     width: 100%;
     min-width: 100%;
