@@ -4,6 +4,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useCart } from "../context/CartContext";
 import PriceTag from "../components/PriceTag";
+import FilterSelect from "../components/FilterSelect";
 
 export default function Productos() {
   const { addToCart } = useCart();
@@ -161,48 +162,39 @@ export default function Productos() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               <div className="prod2026__filter-info">
                 <span>CATEGORÍA</span>
-                <select value={catFilter} onChange={(e) => { setCatFilter(e.target.value); setCurrentPage(1); }}>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <FilterSelect value={catFilter} onChange={(v) => { setCatFilter(v); setCurrentPage(1); }} options={categories} />
               </div>
             </div>
             <div className="prod2026__filter-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
               <div className="prod2026__filter-info">
                 <span>SUBCATEGORÍA</span>
-                <select value={subFilter} onChange={(e) => { setSubFilter(e.target.value); setCurrentPage(1); }}>
-                  {subcategories.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <FilterSelect value={subFilter} onChange={(v) => { setSubFilter(v); setCurrentPage(1); }} options={subcategories} />
               </div>
             </div>
             <div className="prod2026__filter-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 10h8"></path><path d="M8 14h8"></path></svg>
               <div className="prod2026__filter-info">
                 <span>RANGO DE PRECIO</span>
-                <select value={priceFilter} onChange={(e) => { setPriceFilter(e.target.value); setCurrentPage(1); }}>
-                  <option value="Todos los precios">Todos los precios</option>
-                  <option value="Menos de $50">Menos de $50</option>
-                  <option value="$50 - $100">$50 - $100</option>
-                  <option value="Más de $100">Más de $100</option>
-                </select>
+                <FilterSelect
+                  value={priceFilter}
+                  onChange={(v) => { setPriceFilter(v); setCurrentPage(1); }}
+                  options={["Todos los precios", "Menos de $50", "$50 - $100", "Más de $100"]}
+                />
               </div>
             </div>
             <div className="prod2026__filter-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
               <div className="prod2026__filter-info">
                 <span>MARCA</span>
-                <select value={brandFilter} onChange={(e) => { setBrandFilter(e.target.value); setCurrentPage(1); }}>
-                  {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
+                <FilterSelect value={brandFilter} onChange={(v) => { setBrandFilter(v); setCurrentPage(1); }} options={brands} />
               </div>
             </div>
             <div className="prod2026__filter-item" style={{borderRight: 'none'}}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
               <div className="prod2026__filter-info">
                 <span>DISPONIBILIDAD</span>
-                <select value={availFilter} onChange={(e) => { setAvailFilter(e.target.value); setCurrentPage(1); }}>
-                  {availabilities.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
+                <FilterSelect value={availFilter} onChange={(v) => { setAvailFilter(v); setCurrentPage(1); }} options={availabilities} />
               </div>
             </div>
           </div>
@@ -228,11 +220,11 @@ export default function Productos() {
           </div>
           <div className="prod2026__sort">
             <span>Ordenar por:</span>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="Más recientes">Más recientes</option>
-              <option value="Precio: Menor a Mayor">Precio: Menor a Mayor</option>
-              <option value="Precio: Mayor a Menor">Precio: Mayor a Menor</option>
-            </select>
+            <FilterSelect
+              value={sortBy}
+              onChange={setSortBy}
+              options={["Más recientes", "Precio: Menor a Mayor", "Precio: Mayor a Menor"]}
+            />
           </div>
         </div>
 
@@ -296,11 +288,11 @@ export default function Productos() {
 
             <div className="prod2026__pag-size">
               <span>Productos por página:</span>
-              <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
-                <option value="8">8</option>
-                <option value="12">12</option>
-                <option value="24">24</option>
-              </select>
+              <FilterSelect
+                value={itemsPerPage}
+                onChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}
+                options={[8, 12, 24]}
+              />
             </div>
           </div>
         )}
