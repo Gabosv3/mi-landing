@@ -28,7 +28,10 @@ const AdminCategorias = lazy(() => import('./pages/admin/AdminCategorias'));
 const AdminProductos  = lazy(() => import('./pages/admin/AdminProductos'));
 const AdminCupones    = lazy(() => import('./pages/admin/AdminCupones'));
 const AdminMensajes   = lazy(() => import('./pages/admin/AdminMensajes'));
+const AdminUsuarios   = lazy(() => import('./pages/admin/AdminUsuarios'));
+const AdminVentas     = lazy(() => import('./pages/admin/AdminVentas'));
 
+import { captureReferral } from './utils/referral';
 import './App.css';
 
 function RouteFallback() {
@@ -36,8 +39,9 @@ function RouteFallback() {
 }
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => { captureReferral(); }, [search]);
   return null;
 }
 
@@ -77,6 +81,8 @@ export default function App() {
               <Route path="productos"   element={<AdminProductos />} />
               <Route path="cupones"     element={<AdminCupones />} />
               <Route path="mensajes"    element={<AdminMensajes />} />
+              <Route path="usuarios"    element={<AdminUsuarios />} />
+              <Route path="ventas"      element={<AdminVentas />} />
             </Route>
 
             {/* Rutas públicas */}
