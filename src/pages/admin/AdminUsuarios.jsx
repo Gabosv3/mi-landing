@@ -11,6 +11,7 @@ export default function AdminUsuarios() {
   const [loaded,   setLoaded]   = useState(false);
   const [form,     setForm]     = useState(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
+  const [editingUid, setEditingUid] = useState(null);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState("");
 
@@ -40,6 +41,14 @@ export default function AdminUsuarios() {
 
   const openNew = () => {
     setForm(EMPTY_FORM);
+    setEditingUid(null);
+    setError("");
+    setShowForm(true);
+  };
+
+  const openEdit = (u) => {
+    setForm({ name: u.name || "", email: u.email || "", password: "", role: u.role || "vendedor" });
+    setEditingUid(u.uid);
     setError("");
     setShowForm(true);
   };
@@ -47,6 +56,30 @@ export default function AdminUsuarios() {
   const handleSave = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (editingUid) {
+      if (!form.name.trim()) {
+        setError("El nombre es obligatorio.");
+        return;
+      }
+      if (!(await confirm(`¿Guardar los cambios de "${form.name.trim()}"?`))) return;
+      setSaving(true);
+      try {
+        await authedFetch(`/api/users/${editingUid}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.name.trim(), role: form.role }),
+        });
+        await load();
+        setShowForm(false);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     if (!form.name.trim() || !form.email.trim() || !form.password) {
       setError("Completa nombre, email y contraseña.");
       return;
@@ -109,7 +142,7 @@ export default function AdminUsuarios() {
 
       {showForm && (
         <form className="admin-editor" onSubmit={handleSave}>
-          <h2 className="admin-editor__title">Nuevo Usuario</h2>
+          <h2 className="admin-editor__title">{editingUid ? "Editar Usuario" : "Nuevo Usuario"}</h2>
 
           {error && <p className="al-error" style={{ marginBottom: 16 }}>{error}</p>}
 
@@ -125,27 +158,31 @@ export default function AdminUsuarios() {
           </div>
 
           <div className="admin-form-group">
-            <label>Email *</label>
+            <label>Email {editingUid ? "" : "*"}</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
               placeholder="juan@dbm.com"
-              required
+              required={!editingUid}
+              disabled={!!editingUid}
             />
+            {editingUid && <small>El email no se puede cambiar aquí.</small>}
           </div>
 
-          <div className="admin-form-group">
-            <label>Contraseña *</label>
-            <input
-              type="text"
-              value={form.password}
-              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-              placeholder="Mínimo 6 caracteres"
-              required
-            />
-            <small>Compártela con la persona; podrá cambiarla luego desde su cuenta de Google/Firebase.</small>
-          </div>
+          {!editingUid && (
+            <div className="admin-form-group">
+              <label>Contraseña *</label>
+              <input
+                type="text"
+                value={form.password}
+                onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                placeholder="Mínimo 6 caracteres"
+                required
+              />
+              <small>Compártela con la persona; podrá cambiarla luego desde su cuenta de Google/Firebase.</small>
+            </div>
+          )}
 
           <div className="admin-form-group">
             <label>Rol</label>
@@ -157,7 +194,7 @@ export default function AdminUsuarios() {
 
           <div className="admin-editor__actions">
             <button type="submit" className="admin-btn" disabled={saving}>
-              {saving ? "Creando…" : "Crear usuario"}
+              {saving ? "Guardando…" : editingUid ? "Guardar cambios" : "Crear usuario"}
             </button>
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setShowForm(false)}>
               Cancelar
@@ -200,6 +237,7 @@ export default function AdminUsuarios() {
                       : "—"}
                   </td>
                   <td className="admin-table__actions">
+                    <button className="admin-btn admin-btn--sm" onClick={() => openEdit(u)}>Editar</button>
                     <button className="admin-btn admin-btn--sm admin-btn--danger" onClick={() => handleDelete(u)}>Eliminar</button>
                   </td>
                 </tr>
