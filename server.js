@@ -45,7 +45,53 @@ async function requireAdmin(req, res, next) {
   }
 }
 
+// Cuentas creadas antes de que existiera el sistema de roles no tienen
+// documento en "users" -> se tratan como admin (comportamiento previo).
+async function getProfile(uid) {
+  const snap = await db().collection('users').doc(uid).get()
+  if (!snap.exists) return { role: 'admin', name: null, refCode: null }
+  const data = snap.data()
+  return { role: data.role || 'admin', name: data.name || null, refCode: data.refCode || null }
+}
+
+async function requireAdminRole(req, res, next) {
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (!token || !admin.apps.length) {
+    return res.status(401).json({ error: 'No autorizado' })
+  }
+  try {
+    req.user = await admin.auth().verifyIdToken(token)
+    req.profile = await getProfile(req.user.uid)
+    if (req.profile.role !== 'admin') return res.status(403).json({ error: 'Solo un administrador puede hacer esto' })
+    next()
+  } catch {
+    res.status(401).json({ error: 'No autorizado' })
+  }
+}
+
+function slugify(text) {
+  return (text || '')
+    .toString()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+async function generateRefCode(name) {
+  const base = slugify(name) || 'vendedor'
+  for (let i = 0; i < 5; i++) {
+    const candidate = i === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`
+    const existing = await db().collection('users').where('refCode', '==', candidate).limit(1).get()
+    if (existing.empty) return candidate
+  }
+  return `${base}-${Date.now()}`
+}
+
 const app = express()
+
+app.use(express.json())
 
 // index: false porque el index.html lo serviremos aparte, sin cachear,
 // para que nunca quede una version vieja apuntando a assets con hash ya borrados.
@@ -106,6 +152,122 @@ app.get('/api/image/:id', async (req, res) => {
     res.send(buffer)
   } catch {
     res.status(500).send('Error loading image')
+  }
+})
+
+/* ── Usuarios (admin y vendedores) ──────────────────────────
+   Se manejan aqui (no directo desde el cliente a Firestore) porque crear o
+   borrar una cuenta de Firebase Auth solo se puede hacer con el SDK de
+   administrador, y de paso evitamos exponer la coleccion "users" con reglas
+   de seguridad propias: todo pasa por estos endpoints, protegidos por rol. */
+
+app.get('/api/users/me', requireAdmin, async (req, res) => {
+  try {
+    const profile = await getProfile(req.user.uid)
+    res.json({ uid: req.user.uid, email: req.user.email, ...profile })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/users', requireAdminRole, async (req, res) => {
+  try {
+    const snap = await db().collection('users').orderBy('createdAt', 'desc').get()
+    res.json(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/users', requireAdminRole, async (req, res) => {
+  const { email, password, name, role } = req.body || {}
+  if (!email || !password || !name) return res.status(400).json({ error: 'Nombre, email y contraseña son obligatorios' })
+  if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
+  const finalRole = role === 'vendedor' ? 'vendedor' : 'admin'
+  try {
+    const userRecord = await admin.auth().createUser({ email, password, displayName: name })
+    const refCode = await generateRefCode(name)
+    const data = { email, name, role: finalRole, refCode, createdAt: admin.firestore.FieldValue.serverTimestamp() }
+    await db().collection('users').doc(userRecord.uid).set(data)
+    res.json({ uid: userRecord.uid, ...data })
+  } catch (err) {
+    const msg = err.code === 'auth/email-already-exists' ? 'Ya existe una cuenta con ese email.' : err.message
+    res.status(400).json({ error: msg })
+  }
+})
+
+app.patch('/api/users/:uid', requireAdminRole, async (req, res) => {
+  const { name, role } = req.body || {}
+  const data = {}
+  if (name) data.name = name
+  if (role === 'admin' || role === 'vendedor') data.role = role
+  try {
+    await db().collection('users').doc(req.params.uid).update(data)
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.delete('/api/users/:uid', requireAdminRole, async (req, res) => {
+  if (req.params.uid === req.user.uid) return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta.' })
+  try {
+    await admin.auth().deleteUser(req.params.uid)
+    await db().collection('users').doc(req.params.uid).delete()
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+/* ── Ventas referidas ────────────────────────────────────────
+   Se registran cuando un cliente llega con el link de un vendedor
+   (?ref=codigo) y le da "Enviar a WhatsApp" en el carrito. El endpoint es
+   publico (el cliente no esta autenticado) pero solo guarda algo si el
+   refCode corresponde a un vendedor real. */
+
+app.post('/api/sales', async (req, res) => {
+  if (!admin.apps.length) return res.json({ ok: true })
+  const { refCode, items, subtotal, total, couponCode } = req.body || {}
+  if (!refCode || !Array.isArray(items) || items.length === 0) return res.json({ ok: true })
+  try {
+    const sellerSnap = await db().collection('users').where('refCode', '==', refCode).limit(1).get()
+    if (sellerSnap.empty) return res.json({ ok: true })
+    const seller = sellerSnap.docs[0]
+    await db().collection('sales').add({
+      refCode,
+      sellerUid: seller.id,
+      sellerName: seller.data().name || seller.data().email,
+      items,
+      subtotal: subtotal ?? null,
+      total: total ?? null,
+      couponCode: couponCode || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+    res.json({ ok: true })
+  } catch {
+    res.json({ ok: true }) // nunca romper el flujo de compra del cliente por esto
+  }
+})
+
+app.get('/api/sales', requireAdmin, async (req, res) => {
+  try {
+    const profile = await getProfile(req.user.uid)
+    // Se evita combinar where + orderBy en la misma consulta (requeriria un
+    // indice compuesto que no se puede crear sin acceso a la consola de
+    // Firebase); se ordena en memoria en su lugar.
+    const q = profile.role === 'admin'
+      ? db().collection('sales').orderBy('createdAt', 'desc')
+      : db().collection('sales').where('sellerUid', '==', req.user.uid)
+    const snap = await q.get()
+    const rows = snap.docs.map((d) => {
+      const data = d.data()
+      return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.().toISOString() || null }
+    })
+    if (profile.role !== 'admin') rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    res.json(rows)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
 })
 

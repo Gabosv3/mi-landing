@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useContent } from "../hooks/useContent";
 import { parsePrice, formatPrice, displayPrice } from "../utils/price";
 import { useConfirm } from "../context/ConfirmContext";
+import { getReferral } from "../utils/referral";
 
 export default function Cart() {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -106,6 +107,21 @@ export default function Cart() {
     const text = encodeURIComponent(lines.join("\n"));
     const url = `https://wa.me/${phoneDigits}?text=${text}`;
     window.open(url, "_blank");
+
+    const refCode = getReferral();
+    if (refCode) {
+      fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refCode,
+          items: cart.map((item) => ({ name: item.name, price: item.price, quantity: item.quantity })),
+          subtotal,
+          total: pricedItems.length > 0 ? total : null,
+          couponCode: coupon?.code || null,
+        }),
+      }).catch(() => {});
+    }
   };
 
   if (!isCartOpen) return null;
