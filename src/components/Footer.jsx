@@ -10,7 +10,7 @@ const NAV_ROUTES = [
 
 export default function Footer() {
   const year = new Date().getFullYear();
-  const { content } = useContent("contact");
+  const { content, loading: contentLoading } = useContent("contact");
 
   return (
     <footer className="footer">
@@ -35,15 +35,17 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
-            <div>
-              <h4>Contacto</h4>
-              <ul>
-                <li><a href={`tel:${content.phone}`}>{content.phone}</a></li>
-                <li><a href={`mailto:${content.email}`}>{content.email}</a></li>
-                <li>{content.address}</li>
-                <li>{content.hours}</li>
-              </ul>
-            </div>
+            {!contentLoading && (
+              <div>
+                <h4>Contacto</h4>
+                <ul>
+                  <li><a href={`tel:${content.phone}`}>{content.phone}</a></li>
+                  <li><a href={`mailto:${content.email}`}>{content.email}</a></li>
+                  <li>{content.address}</li>
+                  <li>{content.hours}</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 

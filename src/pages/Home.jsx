@@ -1,7 +1,7 @@
 ﻿/* eslint-disable react/prop-types */
 import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useContent } from "../hooks/useContent";
 import { useCart } from "../context/CartContext";
@@ -457,22 +457,28 @@ function CtaBanner({ content }) {
 }
 
 export default function Home() {
-  const [products, setProducts] = useState(PRODUCT_PLACEHOLDER);
+  const [products, setProducts] = useState(null);
   const [categories, setCategories] = useState(null);
-  const { content: hero } = useContent("hero");
-  const { content: features } = useContent("features");
-  const { content: about } = useContent("about");
-  const { content: cta } = useContent("cta");
-  const { content: stats } = useContent("stats");
+  const { content: hero, loading: heroLoading } = useContent("hero");
+  const { content: features, loading: featuresLoading } = useContent("features");
+  const { content: about, loading: aboutLoading } = useContent("about");
+  const { content: cta, loading: ctaLoading } = useContent("cta");
+  const { content: stats, loading: statsLoading } = useContent("stats");
+  const contentReady = !heroLoading && !featuresLoading && !aboutLoading && !ctaLoading && !statsLoading;
 
   useEffect(() => {
-    getDocs(query(collection(db, "products"), limit(6)))
+    getDocs(query(collection(db, "products"), where("featured", "==", true), limit(4)))
       .then((snap) => {
         if (!snap.empty) {
           setProducts(snap.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() })));
+          return;
         }
+        // Sin productos destacados aun: mostrar los mas recientes como respaldo
+        return getDocs(query(collection(db, "products"), limit(4))).then((snap2) => {
+          setProducts(snap2.empty ? PRODUCT_PLACEHOLDER : snap2.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() })));
+        });
       })
-      .catch(() => {});
+      .catch(() => setProducts(PRODUCT_PLACEHOLDER));
 
     getDocs(query(collection(db, "categories"), orderBy("name")))
       .then((snap) => {
@@ -484,6 +490,10 @@ export default function Home() {
       .catch(() => setCategories(CATEGORY_FALLBACK));
   }, []);
 
+  if (!contentReady) {
+    return <div className="home2026-loading" aria-label="Cargando…" />;
+  }
+
   return (
     <main className="home2026">
       <HomeHero content={hero} />
@@ -493,7 +503,7 @@ export default function Home() {
         <AdvantageStrip items={features} />
       </div>
 
-      <ProductsPreview products={products} />
+      {products && <ProductsPreview products={products} />}
       <AboutPreview content={about} stats={stats} />
       <CtaBanner content={cta} />
     </main>

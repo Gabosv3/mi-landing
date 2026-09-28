@@ -5,22 +5,9 @@ import { db } from "../firebase/config";
 import { useCart } from "../context/CartContext";
 import PriceTag from "../components/PriceTag";
 
-const PLACEHOLDER = [
-  { id: "p1", name: "Set de Limpieza Premium", category: "LIMPIEZA DEL HOGAR", description: "Set completo de productos para mantener tu hogar impecable.", image_url: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80" },
-  { id: "p2", name: "Batería de Cocina 12 Piezas", category: "COCINA Y COMEDOR", description: "Juego de ollas y sartenes antiadherentes de alta calidad.", image_url: "https://images.unsplash.com/photo-1584990347449-a1f5b27b8435?w=800&q=80" },
-  { id: "p3", name: "Trapeador con Cubeta Escurridora", category: "LIMPIEZA DEL HOGAR", description: "Sistema de limpieza eficiente con escurridor automático.", image_url: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=800&q=80" },
-  { id: "p4", name: "Juego de Sábanas Queen", category: "DORMITORIO", description: "Sábanas ultrasuaves de microfibra premium.", image_url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80" },
-  { id: "p5", name: "Vajilla 16 Piezas", category: "COCINA Y COMEDOR", description: "Vajilla de cerámica elegante para 4 personas.", image_url: "https://images.unsplash.com/photo-1616627581576-f33190868a2d?w=800&q=80" },
-  { id: "p6", name: "Set de Organización", category: "ORGANIZACIÓN", description: "Cajas apilables transparentes multiusos.", image_url: "https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=800&q=80" },
-  { id: "p7", name: "Licuadora Clásica", category: "ELECTRODOMÉSTICOS", description: "Potente motor para licuados y batidos diarios.", image_url: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=800&q=80" },
-  { id: "p8", name: "Set de Cuchillos con Base", category: "COCINA Y COMEDOR", description: "Cuchillos de acero inoxidable con taco de madera.", image_url: "https://images.unsplash.com/photo-1593618998160-e34014e67546?w=800&q=80" },
-  { id: "p9", name: "Aspiradora Compacta", category: "LIMPIEZA DEL HOGAR", description: "Aspiradora ligera y potente con sistema sin bolsa.", image_url: "https://images.unsplash.com/photo-1558317374-067fb5f30001?w=800&q=80" },
-  { id: "p10", name: "Toallas de Baño", category: "DORMITORIO", description: "Set de toallas de algodón absorbente.", image_url: "https://images.unsplash.com/photo-1584988636402-ddc9d57fb4a7?w=800&q=80" },
-];
-
 export default function Productos() {
   const { addToCart } = useCart();
-  const [products, setProducts] = useState(PLACEHOLDER);
+  const [products, setProducts] = useState([]);
   
   // States para los filtros
   const [catFilter,   setCatFilter]   = useState("Todas las categorías");
@@ -161,6 +148,12 @@ export default function Productos() {
           </div>
         </div>
 
+        {!loaded ? (
+          <div className="products__empty" style={{padding: '80px 0'}}>
+            <p>Cargando productos…</p>
+          </div>
+        ) : (
+        <>
         {/* Filter Bar (Visual) */}
         <div className="prod2026__filterbar">
           <div className="prod2026__filter-group">
@@ -310,6 +303,8 @@ export default function Productos() {
               </select>
             </div>
           </div>
+        )}
+        </>
         )}
 
       </div>

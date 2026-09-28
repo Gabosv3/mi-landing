@@ -20,7 +20,8 @@ function buildImageItem(url, path, isPrimary, file) {
 let _colorUid = 0;
 const colorUid = () => `color_${Date.now()}_${_colorUid++}`;
 
-const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", compareAtPrice: "", brand: "", availability: "Disponible" };
+const EMPTY_FORM = { name: "", category: "", subcategory: "", customCategory: "", description: "", price: "", compareAtPrice: "", brand: "", availability: "Disponible", featured: false };
+const MAX_FEATURED = 4;
 
 export default function AdminProductos() {
   const [products,    setProducts]    = useState([]);
@@ -80,6 +81,7 @@ export default function AdminProductos() {
       compareAtPrice: p.compareAtPrice || "",
       brand:          p.brand || "",
       availability:   p.availability || "Disponible",
+      featured:       !!p.featured,
     });
     /* Cargar imagenes existentes */
     const imgs = Array.isArray(p.images) && p.images.length > 0
@@ -163,6 +165,12 @@ export default function AdminProductos() {
     if (!form.category) return alert("Selecciona una categoría.");
     if (form.category === "custom" && !form.customCategory.trim()) return alert("Escribe el nombre de la categoría personalizada.");
     if (!editingId && images.length === 0) return alert("Agrega al menos una imagen del producto.");
+    if (form.featured) {
+      const otherFeatured = products.filter((p) => p.featured && p.id !== editingId).length;
+      if (otherFeatured >= MAX_FEATURED) {
+        return alert(`Ya hay ${MAX_FEATURED} productos destacados. Quita uno antes de agregar otro.`);
+      }
+    }
     const confirmMsg = editingId ? `¿Guardar los cambios en "${form.name.trim()}"?` : `¿Crear el producto "${form.name.trim()}"?`;
     if (!(await confirm(confirmMsg))) return;
     setSaving(true);
@@ -198,6 +206,7 @@ export default function AdminProductos() {
         compareAtPrice: form.compareAtPrice.trim(),
         brand:       form.brand.trim(),
         availability:form.availability,
+        featured:    form.featured,
         images:      finalImages,
         colors:      finalColors,
         image_url:   primaryImg?.url || "",   /* compatibilidad con vista publica */
@@ -361,6 +370,20 @@ export default function AdminProductos() {
                 <option value="Agotado">Agotado</option>
                 <option value="Bajo pedido">Bajo pedido</option>
               </select>
+            </div>
+
+            {/* Destacado en Inicio */}
+            <div className="admin-form-group admin-form-group--inline">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.featured}
+                  onChange={(e) => setForm((p) => ({ ...p, featured: e.target.checked }))}
+                  disabled={!form.featured && products.filter((p) => p.featured && p.id !== editingId).length >= MAX_FEATURED}
+                />
+                {" "}Destacado en Inicio ({products.filter((p) => p.featured && p.id !== editingId).length + (form.featured ? 1 : 0)}/{MAX_FEATURED})
+              </label>
+              <small>Los productos destacados aparecen en la sección "Productos destacados" de la página de inicio. Máximo {MAX_FEATURED}.</small>
             </div>
 
             {/* Descripcion */}
@@ -537,7 +560,7 @@ export default function AdminProductos() {
                     <td>
                       <div className="adp-product-cell">
                         {imgUrl && <img src={imgUrl} alt={p.name} className="adp-thumb" />}
-                        <span>{p.name}</span>
+                        <span>{p.name}{p.featured && <span title="Destacado en Inicio"> ⭐</span>}</span>
                       </div>
                     </td>
                     <td>

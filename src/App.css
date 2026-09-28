@@ -6109,3 +6109,7 @@ A d d i n g   C a r t   s t y l e s 
 .confirm-btn--ok.confirm-btn--danger {
   background: #dc2626;
 }
+
+.home2026-loading {
+  min-height: 60vh;
+}

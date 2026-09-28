@@ -20,7 +20,7 @@ function validate(form) {
 }
 
 export default function Contact() {
-  const { content } = useContent('contact');
+  const { content, loading: contentLoading } = useContent('contact');
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
@@ -58,6 +58,10 @@ export default function Contact() {
     { icon: '📍', label: 'Dirección', value: content.address, href: null },
     { icon: '🕐', label: 'Horario', value: content.hours, href: null },
   ];
+
+  if (contentLoading) {
+    return <section className="contact" id="contacto" aria-label="Cargando…" />;
+  }
 
   return (
     <section className="contact" id="contacto">
