@@ -453,6 +453,13 @@ export function ContactEditor({ data, onChange, onSave, saving, saved }) {
       <Field label="Email" value={data.email} onChange={f("email")} />
       <Field label="Dirección" value={data.address} onChange={f("address")} />
       <Field label="Horario de atención" value={data.hours} onChange={f("hours")} hint='Ej: "Lun – Vie: 8:00 AM – 5:00 PM"' />
+
+      <p className="admin-editor__title" style={{ marginTop: 24 }}>Redes Sociales</p>
+      <Field label="Facebook" value={data.facebook || ""} onChange={f("facebook")} hint="Link completo, ej: https://facebook.com/tunegocio" />
+      <Field label="Instagram" value={data.instagram || ""} onChange={f("instagram")} hint="Link completo, ej: https://instagram.com/tunegocio" />
+      <Field label="TikTok" value={data.tiktok || ""} onChange={f("tiktok")} hint="Link completo, ej: https://tiktok.com/@tunegocio" />
+      <Field label="WhatsApp" value={data.whatsapp || ""} onChange={f("whatsapp")} hint="Link completo, ej: https://wa.me/50360479762" />
+
       <SaveBar onSave={onSave} saving={saving} saved={saved} />
     </div>
   );

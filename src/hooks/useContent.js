@@ -71,6 +71,10 @@ export const DEFAULT_CONTENT = {
     email: 'info@distribuidoradbm.com',
     address: 'San Salvador, El Salvador',
     hours: 'Lun – Vie: 8:00 AM – 5:00 PM',
+    facebook: '',
+    instagram: '',
+    tiktok: '',
+    whatsapp: '',
   },
   muebles: {
     title: 'Muebles a la Medida',
