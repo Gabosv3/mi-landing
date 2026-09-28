@@ -111,7 +111,9 @@ app.use(express.json())
 // en cache -- si no, un cliente puede ver datos viejos (o incluso la pagina
 // de error 503 cacheada) en vez de la respuesta real del servidor.
 app.use('/api', (req, res, next) => {
-  res.set('Cache-Control', 'no-store')
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
   next()
 })
 
@@ -299,7 +301,14 @@ app.get(/.*/, (req, res, next) => {
   if (req.path.startsWith('/assets/') || req.path.startsWith('/api/') || path.extname(req.path)) {
     return next()
   }
-  res.set('Cache-Control', 'no-cache')
+  // "no-cache" deberia bastar (obliga a revalidar), pero el CDN de Hostinger
+  // ha demostrado quedarse con copias viejas de todos modos. Se fuerza con
+  // no-store + los headers legacy para que ningun proxy intermedio decida
+  // servir una version vieja del index.html (y por lo tanto del JS/CSS
+  // referenciado, que sí cambia de hash en cada build).
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
   res.sendFile(path.join(DIST_DIR, 'index.html'))
 })
 
