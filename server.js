@@ -105,6 +105,16 @@ const app = express()
 
 app.use(express.json())
 
+// El CDN de Hostinger (hcdn) puede cachear respuestas GET si no se le dice
+// explicitamente que no lo haga. Todas las rutas /api/* son dinamicas
+// (excepto /api/image, que se marca inmutable aparte) y nunca deben quedar
+// en cache -- si no, un cliente puede ver datos viejos (o incluso la pagina
+// de error 503 cacheada) en vez de la respuesta real del servidor.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
+
 // index: false porque el index.html lo serviremos aparte, sin cachear,
 // para que nunca quede una version vieja apuntando a assets con hash ya borrados.
 app.use(express.static(DIST_DIR, { index: false }))
