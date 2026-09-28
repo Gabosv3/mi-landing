@@ -12,6 +12,9 @@ node_modules
 dist-ssr
 *.local
 
+# Credenciales de Firebase Admin (nunca deben subirse al repo)
+service-account*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

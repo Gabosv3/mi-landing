@@ -1,16 +1,28 @@
 import express from 'express'
 import multer from 'multer'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import admin from 'firebase-admin'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST_DIR = path.join(__dirname, 'dist')
 
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
-  })
+// En Hostinger la credencial llega en la variable de entorno
+// FIREBASE_SERVICE_ACCOUNT. En desarrollo local es mas comodo dejar el JSON
+// descargado de Firebase (Configuracion del proyecto -> Cuentas de servicio)
+// como archivo local; nunca se sube al repo (ver .gitignore).
+const LOCAL_SERVICE_ACCOUNT_PATH = path.join(__dirname, 'service-account.json')
+
+function loadServiceAccount() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+  if (fs.existsSync(LOCAL_SERVICE_ACCOUNT_PATH)) return JSON.parse(fs.readFileSync(LOCAL_SERVICE_ACCOUNT_PATH, 'utf8'))
+  return null
+}
+
+const serviceAccount = loadServiceAccount()
+if (serviceAccount) {
+  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 }
 
 // Hostinger recrea todo el sistema de archivos de la app en cada deploy
