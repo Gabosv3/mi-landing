@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-const ADMIN_NAV = [
+const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: "▣" },
   {
     label: "Sitio Web",
@@ -23,13 +23,7 @@ const ADMIN_NAV = [
       { to: "/admin/cupones",    label: "Cupones",    icon: "🏷" },
     ],
   },
-  { to: "/admin/ventas",    label: "Ventas",    icon: "💰" },
-  { to: "/admin/usuarios",  label: "Usuarios",  icon: "👤" },
-  { to: "/admin/mensajes",  label: "Mensajes",  icon: "◉" },
-];
-
-const VENDEDOR_NAV = [
-  { to: "/admin/ventas", label: "Mis Ventas", icon: "💰" },
+  { to: "/admin/mensajes", label: "Mensajes", icon: "◉" },
 ];
 
 function NavItem({ to, label, icon }) {
@@ -70,11 +64,9 @@ function NavGroup({ label, icon, children, isOpen, onToggle, hasActiveChild }) {
 }
 
 export default function AdminSidebar() {
-  const { user, profile, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isVendedor = profile?.role === 'vendedor';
-  const NAV = isVendedor ? VENDEDOR_NAV : ADMIN_NAV;
 
   const groupHasActiveChild = (group) =>
     group.children?.some((c) => location.pathname.startsWith(c.to)) ?? false;
@@ -132,7 +124,7 @@ export default function AdminSidebar() {
           <div className="as-user__avatar">{initials}</div>
           <div className="as-user__info">
             <span className="as-user__email">{user?.email}</span>
-            <span className="as-user__role">{isVendedor ? "Vendedor" : "Administrador"}</span>
+            <span className="as-user__role">Administrador</span>
           </div>
         </div>
         <div className="as-footer__links">
