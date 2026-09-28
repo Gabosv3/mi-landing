@@ -8,6 +8,7 @@ import { uploadImage as uploadFile } from "../../utils/uploadImage";
 import { parsePrice, getDiscountInfo, displayPrice } from "../../utils/price";
 import RichTextEditor from "../../components/admin/RichTextEditor";
 import { useConfirm } from "../../context/ConfirmContext";
+import FilterSelect from "../../components/FilterSelect";
 
 /* Genera un id unico local para manejar el array de imagenes en estado */
 let _uid = 0;
@@ -34,6 +35,9 @@ export default function AdminProductos() {
   const [showForm,    setShowForm]    = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [search,      setSearch]      = useState("");
+  const [catFilter,   setCatFilter]   = useState("Todas las categorías");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage,setItemsPerPage]= useState(10);
   const fileInputRef = useRef(null);
   const confirm = useConfirm();
 
@@ -236,12 +240,19 @@ export default function AdminProductos() {
     await loadProducts();
   };
 
+  const productCategories = ["Todas las categorías", ...new Set(products.map((p) => p.category).filter(Boolean))];
+
   const filtered = products.filter(
     (p) =>
-      !search ||
-      (p.name     || "").toLowerCase().includes(search.toLowerCase()) ||
-      (p.category || "").toLowerCase().includes(search.toLowerCase())
+      (catFilter === "Todas las categorías" || p.category === catFilter) &&
+      (!search ||
+        (p.name     || "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.category || "").toLowerCase().includes(search.toLowerCase()))
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const pageSafe = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice((pageSafe - 1) * itemsPerPage, pageSafe * itemsPerPage);
 
   const primaryImg = images.find((i) => i.isPrimary) || images[0];
 
@@ -517,15 +528,22 @@ export default function AdminProductos() {
         </form>
       )}
 
-      {/* ---------------- BUSQUEDA ---------------- */}
+      {/* ---------------- BUSQUEDA Y FILTROS ---------------- */}
       <div className="adp-search-row">
         <input
           type="search"
           className="adp-search"
           placeholder="Buscar por nombre o categoría"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
         />
+        <div className="adp-cat-filter">
+          <FilterSelect
+            value={catFilter}
+            onChange={(v) => { setCatFilter(v); setCurrentPage(1); }}
+            options={productCategories}
+          />
+        </div>
         <span className="adp-count">{filtered.length} producto{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
@@ -549,7 +567,7 @@ export default function AdminProductos() {
                 </td>
               </tr>
             ) : (
-              filtered.map((p) => {
+              paginated.map((p) => {
                 const mainImg = Array.isArray(p.images) && p.images.length > 0
                   ? (p.images.find((i) => i.isPrimary) || p.images[0])
                   : null;
@@ -590,6 +608,41 @@ export default function AdminProductos() {
           </tbody>
         </table>
       </div>
+
+      {filtered.length > 0 && (
+        <div className="adp-pagination">
+          <span className="adp-pagination__info">
+            Mostrando {(pageSafe - 1) * itemsPerPage + 1}–{Math.min(pageSafe * itemsPerPage, filtered.length)} de {filtered.length}
+          </span>
+          <div className="adp-pagination__controls">
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--ghost"
+              disabled={pageSafe === 1}
+              onClick={() => setCurrentPage(pageSafe - 1)}
+            >
+              &lsaquo; Anterior
+            </button>
+            <span className="adp-pagination__page">Página {pageSafe} de {totalPages}</span>
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--ghost"
+              disabled={pageSafe === totalPages}
+              onClick={() => setCurrentPage(pageSafe + 1)}
+            >
+              Siguiente &rsaquo;
+            </button>
+          </div>
+          <div className="adp-pagination__size">
+            <span>Por página:</span>
+            <FilterSelect
+              value={itemsPerPage}
+              onChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}
+              options={[10, 20, 50]}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
