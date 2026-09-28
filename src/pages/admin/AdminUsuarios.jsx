@@ -28,7 +28,7 @@ export default function AdminUsuarios() {
   const load = async () => {
     try {
       const data = await authedFetch("/api/users");
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch {
       setUsers([]);
     } finally {
