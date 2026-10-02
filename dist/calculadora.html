@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e12">
+<title>Calculadora</title>
+<style>
+  :root {
+    --bg: #0b0e12;
+    --bg-glow: #151a21;
+    --panel: #12161c;
+    --panel-border: #222831;
+    --display: #0c1015;
+    --text: #f2f4f7;
+    --muted: #8a919c;
+    --key: #1b2028;
+    --key-top: #222832;
+    --key-shadow: rgba(0, 0, 0, .55);
+    --accent-top: #d9b27a;
+    --accent-bottom: #b98c4f;
+    --accent-text: #1a140b;
+    --gold: #e0b878;
+    --header-border: #1b2027;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef0f3;
+    --bg-glow: #ffffff;
+    --panel: #ffffff;
+    --panel-border: #dde1e7;
+    --display: #f3f5f8;
+    --text: #14181e;
+    --muted: #6b7380;
+    --key: #eceff3;
+    --key-top: #f6f8fa;
+    --key-shadow: rgba(30, 40, 60, .18);
+    --header-border: #dde1e7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: radial-gradient(900px 500px at 8% 0%, var(--bg-glow), transparent 70%), var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    transition: background .25s, color .25s;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+  /* Header */
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 18px clamp(16px, 6vw, 90px);
+    border-bottom: 1px solid var(--header-border);
+  }
+  .brand { display: flex; align-items: center; gap: 14px; font-size: 1.4rem; }
+  .brand svg { width: 34px; height: 34px; }
+  nav { display: flex; gap: 38px; }
+  nav button {
+    padding: 8px 0; color: var(--muted); font-size: 1rem;
+    border-bottom: 2px solid transparent; transition: color .2s;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--text); border-bottom-color: var(--gold); }
+
+  .theme {
+    justify-self: end; display: flex; padding: 3px; border-radius: 999px;
+    background: var(--key); border: 1px solid var(--panel-border);
+  }
+  .theme button {
+    width: 38px; height: 30px; border-radius: 999px; display: grid; place-items: center; color: var(--muted);
+  }
+  .theme button.on { background: var(--key-top); color: var(--gold); box-shadow: 0 1px 4px var(--key-shadow); }
+  .theme svg { width: 17px; height: 17px; }
+
+  /* Main */
+  main {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 28px 16px;
+  }
+  .view { display: none; width: 100%; }
+  .view.active { display: flex; }
+  #view-inicio { justify-content: center; align-items: flex-start; gap: 30px; flex-wrap: wrap; }
+
+  .calc {
+    width: 610px; max-width: 100%; padding: 28px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 18px;
+    box-shadow: 0 30px 60px -20px var(--key-shadow);
+  }
+  .display {
+    background: var(--display); border-radius: 12px; padding: 18px 20px 14px;
+    text-align: right; height: 154px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, .35);
+    overflow: hidden;
+  }
+  .expr { color: var(--muted); font-size: 1.55rem; min-height: 2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .value { font-size: 4.6rem; font-weight: 300; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+  .key {
+    height: 84px; border-radius: 12px; font-size: 2rem; font-weight: 300;
+    background: linear-gradient(180deg, var(--key-top), var(--key));
+    box-shadow: 0 4px 10px var(--key-shadow), inset 0 1px 0 rgba(255, 255, 255, .05);
+    transition: transform .06s, filter .15s;
+    user-select: none; touch-action: manipulation;
+  }
+  .key:hover { filter: brightness(1.12); }
+  .key:active, .key.press { transform: translateY(2px) scale(.985); box-shadow: 0 1px 3px var(--key-shadow); }
+  .key.op {
+    background: linear-gradient(180deg, var(--accent-top), var(--accent-bottom));
+    color: var(--accent-text); font-weight: 400;
+  }
+  .key.op.active { outline: 2px solid var(--text); outline-offset: -4px; }
+  .key.zero { grid-column: span 2; }
+
+  /* Historial */
+  .history {
+    width: 356px; max-width: 100%; padding: 24px 26px; min-height: 672px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px;
+    margin-top: 10px;
+  }
+  .history header {
+    display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px;
+    border-bottom: 1px solid var(--panel-border); grid-template-columns: none;
+  }
+  .history h2 { font-size: 1.3rem; font-weight: 500; }
+  .history .trash { color: var(--muted); padding: 4px; border-radius: 6px; }
+  .history .trash:hover { color: var(--gold); }
+  .history .trash svg { width: 22px; height: 22px; display: block; }
+  .history ul { list-style: none; }
+  .history li {
+    display: grid; grid-template-columns: 1fr auto; row-gap: 6px; padding: 16px 0;
+    border-bottom: 1px solid var(--panel-border); cursor: pointer;
+  }
+  .history li:hover .h-expr { color: var(--text); }
+  .h-expr { color: var(--muted); font-size: 1.1rem; transition: color .15s; }
+  .h-res { font-size: 1.1rem; }
+  .h-time { color: var(--muted); font-size: .85rem; opacity: .8; }
+  .empty { color: var(--muted); padding: 24px 0; font-size: .95rem; }
+
+  /* Otras vistas */
+  .info {
+    max-width: 560px; margin: 0 auto; padding: 32px; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 16px; flex-direction: column; gap: 12px;
+  }
+  .info h2 { font-weight: 500; }
+  .info p, .info li { color: var(--muted); line-height: 1.6; }
+  .info ul { padding-left: 20px; }
+
+  footer {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 22px clamp(16px, 6vw, 90px); border-top: 1px solid var(--header-border);
+    color: var(--muted); font-size: .85rem;
+  }
+  footer span { display: flex; align-items: center; gap: 10px; }
+  footer svg { width: 16px; height: 16px; }
+
+  /* Tablet / móvil */
+  @media (max-width: 900px) {
+    header { grid-template-columns: 1fr auto; row-gap: 12px; }
+    nav { grid-column: 1 / -1; order: 3; justify-content: center; gap: 26px; }
+    .history { min-height: 0; margin-top: 0; }
+  }
+  @media (max-width: 520px) {
+    main { padding: 16px 12px; align-items: flex-start; }
+    .calc { padding: 16px; }
+    .display { height: 120px; padding: 12px 14px; }
+    .expr { font-size: 1.15rem; }
+    .value { font-size: 3.2rem; }
+    .keys { gap: 10px; margin-top: 16px; }
+    .key { height: 64px; font-size: 1.6rem; }
+    .brand { font-size: 1.15rem; }
+    .brand svg { width: 28px; height: 28px; }
+    footer { justify-content: center; text-align: center; }
+  }
+  @media (max-height: 640px) and (max-width: 520px) {
+    .key { height: 54px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <rect x="4" y="3" width="24" height="26" rx="3.5"/>
+      <rect x="8" y="7" width="16" height="4.5" rx="1" />
+      <g fill="currentColor" stroke="none">
+        <circle cx="10" cy="16.5" r="1.3"/><circle cx="16" cy="16.5" r="1.3"/><circle cx="22" cy="16.5" r="1.3"/>
+        <circle cx="10" cy="21" r="1.3"/><circle cx="16" cy="21" r="1.3"/><circle cx="22" cy="21" r="1.3"/>
+        <circle cx="10" cy="25.2" r="1.3"/><circle cx="16" cy="25.2" r="1.3"/><circle cx="22" cy="25.2" r="1.3"/>
+      </g>
+    </svg>
+    <span>Calculadora</span>
+  </div>
+
+  <nav>
+    <button class="active" data-view="inicio">Inicio</button>
+    <button data-view="herramientas">Herramientas</button>
+    <button data-view="acerca">Acerca de</button>
+  </nav>
+
+  <div class="theme" role="group" aria-label="Tema">
+    <button id="t-light" aria-label="Tema claro">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button id="t-dark" aria-label="Tema oscuro">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section id="view-inicio" class="view active">
+    <div class="calc">
+      <div class="display" aria-live="polite">
+        <div class="expr" id="expr"></div>
+        <div class="value" id="value">0</div>
+      </div>
+      <div class="keys" id="keys">
+        <button class="key" data-a="clear">AC</button>
+        <button class="key" data-a="sign">±</button>
+        <button class="key" data-a="percent">%</button>
+        <button class="key op" data-a="op" data-v="/">÷</button>
+
+        <button class="key" data-a="num" data-v="7">7</button>
+        <button class="key" data-a="num" data-v="8">8</button>
+        <button class="key" data-a="num" data-v="9">9</button>
+        <button class="key op" data-a="op" data-v="*">×</button>
+
+        <button class="key" data-a="num" data-v="4">4</button>
+        <button class="key" data-a="num" data-v="5">5</button>
+        <button class="key" data-a="num" data-v="6">6</button>
+        <button class="key op" data-a="op" data-v="-">−</button>
+
+        <button class="key" data-a="num" data-v="1">1</button>
+        <button class="key" data-a="num" data-v="2">2</button>
+        <button class="key" data-a="num" data-v="3">3</button>
+        <button class="key op" data-a="op" data-v="+">+</button>
+
+        <button class="key zero" data-a="num" data-v="0">0</button>
+        <button class="key" data-a="dot">.</button>
+        <button class="key op" data-a="equals">=</button>
+      </div>
+    </div>
+
+    <aside class="history">
+      <header>
+        <h2>Historial</h2>
+        <button class="trash" id="clear-history" aria-label="Borrar historial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+        </button>
+      </header>
+      <ul id="history-list"></ul>
+    </aside>
+  </section>
+
+  <section id="view-herramientas" class="view info">
+    <h2>Herramientas</h2>
+    <p>Atajos de teclado disponibles:</p>
+    <ul>
+      <li><b>0-9</b> y <b>.</b> para escribir números</li>
+      <li><b>+ − * /</b> para las operaciones</li>
+      <li><b>Enter</b> o <b>=</b> para calcular</li>
+      <li><b>Backspace</b> borra el último dígito</li>
+      <li><b>Esc</b> o <b>C</b> equivale a AC</li>
+    </ul>
+  </section>
+
+  <section id="view-acerca" class="view info">
+    <h2>Acerca de</h2>
+    <p>Calculadora hecha con HTML, CSS y JavaScript puro como práctica de programación con IA. No usa librerías ni servidor: todo corre en tu navegador y el historial se guarda solo en este dispositivo.</p>
+  </section>
+</main>
+
+<footer>
+  <span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4" stroke-linecap="round"/></svg>
+    Cálculos rápidos, precisos y seguros
+  </span>
+  <span>Tu herramienta, siempre disponible</span>
+</footer>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const SYM = { '+': '+', '-': '–', '*': '×', '/': '÷' };
+  const MAX_DIGITS = 15;
+
+  // ---------- Estado ----------
+  let cur = '0';        // número que se está escribiendo (string, con "-" y ".")
+  let acc = null;       // acumulador
+  let op = null;        // operador pendiente
+  let fresh = false;    // el siguiente dígito reemplaza a cur
+  let error = false;
+  let exprText = '';
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('calc-history') || '[]'); } catch (e) {}
+
+  // ---------- Utilidades ----------
+  // Evita errores de coma flotante: 0.1 + 0.2 => 0.3
+  const clean = (n) => parseFloat(n.toPrecision(12));
+  const toStr = (n) => String(clean(n));
+
+  function fmt(str) {
+    if (str === 'Error') return str;
+    if (/e/i.test(str)) return str;
+    const neg = str.startsWith('-');
+    const [i, d] = str.replace('-', '').split('.');
+    const int = i.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-' : '') + int + (d !== undefined ? '.' + d : '');
+  }
+
+  function compute(a, b, o) {
+    switch (o) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b === 0 ? NaN : a / b;
+    }
+  }
+
+  // ---------- Pantalla ----------
+  function render() {
+    const v = $('#value');
+    const text = fmt(cur);
+    v.textContent = text;
+    // reduce la fuente si el número es largo
+    const w = window.innerWidth <= 520;
+    const base = w ? 3.2 : 4.6;
+    const len = text.length;
+    const scale = len > 9 ? Math.max(.45, 9 / len) : 1;
+    v.style.fontSize = (base * scale) + 'rem';
+    $('#expr').textContent = exprText;
+    document.querySelectorAll('.key.op[data-a="op"]').forEach((k) => {
+      k.classList.toggle('active', op === k.dataset.v && fresh);
+    });
+  }
+
+  function renderHistory() {
+    const ul = $('#history-list');
+    if (!history.length) {
+      ul.innerHTML = '<li class="empty" style="cursor:default;display:block;border:0">Aún no hay operaciones.</li>';
+      return;
+    }
+    ul.innerHTML = '';
+    history.forEach((h) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="h-expr"></span><span class="h-res"></span><span class="h-time"></span>';
+      li.children[0].textContent = h.expr;
+      li.children[1].textContent = fmt(h.res);
+      li.children[2].textContent = h.time;
+      li.addEventListener('click', () => { reset(); cur = h.res; fresh = true; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function saveHistory() {
+    try { localStorage.setItem('calc-history', JSON.stringify(history)); } catch (e) {}
+  }
+
+  // ---------- Acciones ----------
+  function reset() { cur = '0'; acc = null; op = null; fresh = false; error = false; exprText = ''; }
+
+  function num(d) {
+    if (error) reset();
+    if (fresh) { if (!op) exprText = ''; cur = d; fresh = false; }
+    else if (cur.replace(/[-.]/g, '').length >= MAX_DIGITS) return;
+    else cur = cur === '0' ? d : cur === '-0' ? '-' + d : cur + d;
+    render();
+  }
+
+  function dot() {
+    if (error) reset();
+    if (fresh) { if (!op) exprText = ''; cur = '0.'; fresh = false; }
+    else if (!cur.includes('.')) cur += '.';
+    render();
+  }
+
+  function operator(o) {
+    if (error) return;
+    if (op && !fresh) {
+      const r = compute(acc, parseFloat(cur), op);
+      if (Number.isNaN(r)) return fail();
+      acc = clean(r);
+      cur = String(acc);
+    } else if (!op) {
+      acc = parseFloat(cur);
+    }
+    op = o; fresh = true;
+    exprText = fmt(String(acc)) + ' ' + SYM[o];
+    render();
+  }
+
+  function equals() {
+    if (error || !op) return;
+    const b = parseFloat(cur);
+    const r = compute(acc, b, op);
+    const expr = fmt(String(acc)) + ' ' + SYM[op] + ' ' + fmt(cur);
+    if (Number.isNaN(r)) { exprText = expr; return fail(); }
+    const res = toStr(r);
+    const d = new Date();
+    history.unshift({
+      expr, res,
+      time: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
+    });
+    history = history.slice(0, 30);
+    saveHistory(); renderHistory();
+    exprText = expr;
+    cur = res; acc = null; op = null; fresh = true;
+    render();
+  }
+
+  function fail() { cur = 'Error'; error = true; acc = null; op = null; fresh = true; render(); }
+
+  function sign() {
+    if (error) return;
+    if (cur === '0') return;
+    cur = cur.startsWith('-') ? cur.slice(1) : '-' + cur;
+    render();
+  }
+
+  function percent() {
+    if (error) return;
+    cur = toStr(parseFloat(cur) / 100);
+    render();
+  }
+
+  function back() {
+    if (error) return reset(), render();
+    if (fresh) return;
+    cur = cur.length > 1 && !(cur.length === 2 && cur.startsWith('-')) ? cur.slice(0, -1) : '0';
+    render();
+  }
+
+  // ---------- Eventos ----------
+  $('#keys').addEventListener('click', (e) => {
+    const b = e.target.closest('.key'); if (!b) return;
+    const a = b.dataset.a, v = b.dataset.v;
+    if (a === 'num') num(v);
+    else if (a === 'dot') dot();
+    else if (a === 'op') operator(v);
+    else if (a === 'equals') equals();
+    else if (a === 'clear') { reset(); render(); }
+    else if (a === 'sign') sign();
+    else if (a === 'percent') percent();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    let sel = null;
+    if (/^[0-9]$/.test(k)) { num(k); sel = `[data-a="num"][data-v="${k}"]`; }
+    else if (k === '.' || k === ',') { dot(); sel = '[data-a="dot"]'; }
+    else if ('+-*/'.includes(k)) { e.preventDefault(); operator(k); sel = `[data-a="op"][data-v="${CSS.escape(k)}"]`; }
+    else if (k === 'Enter' || k === '=') { e.preventDefault(); equals(); sel = '[data-a="equals"]'; }
+    else if (k === 'Backspace') back();
+    else if (k === 'Escape' || k === 'c' || k === 'C') { reset(); render(); sel = '[data-a="clear"]'; }
+    else if (k === '%') { percent(); sel = '[data-a="percent"]'; }
+    if (sel) {
+      const el = document.querySelector('.key' + sel);
+      if (el) { el.classList.add('press'); setTimeout(() => el.classList.remove('press'), 110); }
+    }
+  });
+
+  $('#clear-history').addEventListener('click', () => { history = []; saveHistory(); renderHistory(); });
+  window.addEventListener('resize', render);
+
+  // ---------- Navegación ----------
+  document.querySelectorAll('nav button').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.view').forEach((s) => s.classList.toggle('active', s.id === 'view-' + b.dataset.view));
+  }));
+
+  // ---------- Tema ----------
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    $('#t-light').classList.toggle('on', t === 'light');
+    $('#t-dark').classList.toggle('on', t === 'dark');
+    $('meta[name="theme-color"]').content = t === 'light' ? '#eef0f3' : '#0b0e12';
+    try { localStorage.setItem('calc-theme', t); } catch (e) {}
+  }
+  $('#t-light').addEventListener('click', () => setTheme('light'));
+  $('#t-dark').addEventListener('click', () => setTheme('dark'));
+  let saved = null;
+  try { saved = localStorage.getItem('calc-theme'); } catch (e) {}
+  setTheme(saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+
+  renderHistory();
+  render();
+})();
+</script>
+</body>
+</html>
